@@ -1,631 +1,2590 @@
-"use client";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIREON — AI Property & Energy Intelligence</title>
+<meta name="description" content="VIREON is the UK's AI-powered property and energy intelligence platform. Retrofit planning, sustainability analysis, and smart building intelligence for homeowners, landlords, and developers.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #ffffff;
+    --ink-deep: #ffffff;
+    --ink-mid: #f7f7f7;
+    --ink-light: #efefef;
+    --surface: #f2f2f2;
+    --border: rgba(0,0,0,0.08);
+    --border-warm: rgba(26,58,107,0.18);
+    --amber: #1a3a6b;
+    --amber-light: #2a4f8a;
+    --amber-dim: rgba(26,58,107,0.07);
+    --text-primary: #f7f7f7;
+    --text-secondary: #555555;
+    --text-muted: #999999;
+    --white: #000000;
+    --green: #2a4f8a;
+    --green-dim: rgba(26,58,107,0.08);
+  }
 
-import { useState, useEffect, useRef } from "react";
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-function useCounter(target: number, duration = 2000, start = false) {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    if (!start) return;
-    let startTime: number | null = null;
-    const step = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(Math.floor(eased * target));
-      if (progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [target, duration, start]);
-  return value;
-}
+  html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+  }
 
-function AnimatedStat({ value, suffix, label, started }: { value: number; suffix: string; label: string; started: boolean }) {
-  const count = useCounter(value, 2200, started);
-  return (
-    <div style={{ textAlign: "center" }}>
-      <div style={{ fontSize: "3rem", fontWeight: 700, fontFamily: "'DM Serif Display', Georgia, serif", color: "#e8f5e2", lineHeight: 1 }}>
-        {count.toLocaleString()}{suffix}
+  body {
+    background: #ffffff;
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── NOISE TEXTURE ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.15;
+  }
+
+  /* ─── TYPOGRAPHY ─── */
+  .display { font-family: 'Syne', sans-serif; line-height: 1.1; }
+  .mono { font-family: 'DM Mono', monospace; }
+
+  h1, h2, h3 { font-family: 'Syne', sans-serif; font-weight: 600; line-height: 1.12; }
+
+  /* ─── SCROLL ANIMATIONS ─── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1);
+  }
+  .reveal.visible { opacity: 1; transform: none; }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+  .reveal-delay-4 { transition-delay: 0.4s; }
+  .reveal-delay-5 { transition-delay: 0.5s; }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 20px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px) saturate(1.4);
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .nav-logo-mark {
+    width: 32px; height: 32px;
+    background: var(--amber);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+  }
+
+  .nav-logo-text {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 17px;
+    color: #000000;
+    letter-spacing: 0.08em;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 36px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: #555555;
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text-primary); }
+
+  .nav-cta {
+    background: var(--amber);
+    color: #ffffff !important;
+    padding: 9px 22px;
+    border-radius: 6px;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    letter-spacing: 0.04em !important;
+    transition: all 0.2s ease !important;
+  }
+  .nav-cta:hover {
+    background: #3a6199 !important;
+    color: #ffffff !important;
+  }
+
+  .nav-mobile-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  /* ─── HERO ─── */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 120px 48px 80px;
+    position: relative;
+    overflow: hidden;
+    background: #ffffff;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: #ffffff;
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 80%);
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 760px;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(26,58,107,0.06);
+    border: 1px solid rgba(26,58,107,0.15);
+    border-radius: 100px;
+    padding: 6px 16px;
+    margin-bottom: 32px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--amber);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--amber);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .hero-h1 {
+    font-size: clamp(40px, 5.5vw, 72px);
+    color: #000000;
+    margin-bottom: 24px;
+    letter-spacing: -0.02em;
+  }
+
+  .hero-h1 em {
+    font-style: normal;
+    color: var(--amber);
+  }
+
+  .hero-sub {
+    font-size: clamp(16px, 1.8vw, 19px);
+    color: #555555;
+    max-width: 560px;
+    margin-bottom: 44px;
+    line-height: 1.75;
+    font-weight: 300;
+  }
+
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    background: var(--amber);
+    color: #ffffff;
+    padding: 14px 30px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14.5px;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-primary:hover {
+    background: var(--amber-light);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 30px rgba(26,58,107,0.25);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: #111111;
+    padding: 13px 28px;
+    border-radius: 8px;
+    font-weight: 400;
+    font-size: 14.5px;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-secondary:hover {
+    border-color: rgba(0,0,0,0.18);
+    background: rgba(0,0,0,0.04);
+  }
+
+  .hero-meta {
+    position: absolute;
+    bottom: 48px;
+    left: 48px;
+    right: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 2;
+  }
+
+  .hero-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #888888;
+    font-family: 'DM Mono', monospace;
+    font-weight: 300;
+  }
+
+  .status-dot {
+    width: 5px; height: 5px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 3s infinite;
+  }
+
+  .hero-scroll {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #aaaaaa;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .scroll-line {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.3));
+    animation: scrollDown 2s ease-in-out infinite;
+  }
+
+  @keyframes scrollDown {
+    0% { transform: scaleY(0); transform-origin: top; }
+    50% { transform: scaleY(1); transform-origin: top; }
+    51% { transform: scaleY(1); transform-origin: bottom; }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+  }
+
+  /* ─── SECTIONS COMMON ─── */
+  section { padding: 96px 48px; }
+
+  .section-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--amber);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: clamp(28px, 3.5vw, 46px);
+    color: #000000;
+    margin-bottom: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .section-lead {
+    font-size: 17px;
+    color: var(--text-secondary);
+    max-width: 580px;
+    line-height: 1.75;
+    font-weight: 300;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.08) 20%, rgba(0,0,0,0.08) 80%, transparent);
+    margin: 0 48px;
+  }
+
+  /* ─── WHAT VIREON DOES ─── */
+  #what {
+    background: #ffffff;
+  }
+
+  .what-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+    margin-top: 60px;
+  }
+
+  .what-visual {
+    position: relative;
+    height: 440px;
+    background: #f2f2f2;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .what-visual-inner {
+    position: relative;
+    width: 280px;
+    height: 280px;
+  }
+
+  .orbital-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(26,58,107,0.15);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    animation: rotate 20s linear infinite;
+  }
+
+  .orbital-ring:nth-child(1) { width: 100%; height: 100%; animation-duration: 20s; }
+  .orbital-ring:nth-child(2) { width: 75%; height: 75%; animation-duration: 15s; animation-direction: reverse; }
+  .orbital-ring:nth-child(3) { width: 50%; height: 50%; animation-duration: 10s; }
+
+  .orbital-dot {
+    position: absolute;
+    width: 8px; height: 8px;
+    background: var(--amber);
+    border-radius: 50%;
+    top: 0; left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    box-shadow: 0 0 12px rgba(26,58,107,0.6);
+  }
+
+  @keyframes rotate { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+  .orbital-center {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px; height: 60px;
+    background: #1a3a6b;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: #000000;
+    box-shadow: 0 0 40px rgba(26,58,107,0.3);
+  }
+
+  .what-visual-label {
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    right: 24px;
+    background: rgba(255,255,255,0.95);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .what-visual-label strong {
+    display: block;
+    color: var(--green);
+    margin-bottom: 3px;
+  }
+
+  .what-points {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .what-point {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    padding: 24px;
+    background: #f2f2f2;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .what-point:hover {
+    border-color: rgba(26,58,107,0.2);
+    background: #ebebeb;
+  }
+
+  .what-icon {
+    width: 40px; height: 40px;
+    background: var(--amber-dim);
+    border: 1px solid var(--border-warm);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+  }
+
+  .what-point h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: #000000;
+    margin-bottom: 5px;
+  }
+
+  .what-point p {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  /* ─── AI INTELLIGENCE ─── */
+  #intelligence {
+    background: #ffffff;
+  }
+
+  .intel-header {
+    max-width: 600px;
+    margin-bottom: 64px;
+  }
+
+  .intel-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: rgba(0,0,0,0.08);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .intel-card {
+    background: #f4f4f4;
+    padding: 40px 36px;
+    transition: background 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .intel-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 60px; height: 2px;
+    background: var(--amber);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .intel-card:hover { background: #efefef; }
+  .intel-card:hover::before { opacity: 1; }
+
+  .intel-number {
+    font-family: 'Syne', sans-serif;
+    font-size: 40px;
+    color: var(--amber);
+    opacity: 0.6;
+    margin-bottom: 16px;
+    display: block;
+    font-weight: 400;
+  }
+
+  .intel-card h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 17px;
+    font-weight: 500;
+    color: #000000;
+    margin-bottom: 12px;
+  }
+
+  .intel-card p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  .intel-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 20px;
+  }
+
+  .intel-tag {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--amber);
+    background: var(--amber-dim);
+    border: 1px solid var(--border-warm);
+    border-radius: 4px;
+    padding: 3px 9px;
+  }
+
+  /* ─── DIGITAL TWIN ─── */
+  #twin {
+    background: #f4f4f4;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .twin-bg-glow {
+    position: absolute;
+    top: 0; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(26,58,107,0.05) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  .twin-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .twin-content { position: relative; z-index: 2; }
+
+  .twin-features {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 36px;
+  }
+
+  .twin-feature {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 18px 20px;
+    background: rgba(0,0,0,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: border-color 0.2s;
+  }
+
+  .twin-feature:hover { border-color: var(--border-warm); }
+
+  .twin-feature-icon {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    background: var(--amber-dim);
+    border: 1px solid var(--border-warm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .twin-feature h4 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #000000;
+    margin-bottom: 4px;
+  }
+
+  .twin-feature p {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  .twin-visual {
+    position: relative;
+    z-index: 2;
+  }
+
+  .twin-card {
+    background: #f2f2f2;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+
+  .twin-card-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .twin-card-title {
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-secondary);
+    letter-spacing: 0.06em;
+  }
+
+  .twin-card-live {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--green);
+  }
+
+  .twin-card-live::before {
+    content: '';
+    width: 5px; height: 5px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  .twin-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: rgba(0,0,0,0.07);
+  }
+
+  .twin-metric {
+    background: #f2f2f2;
+    padding: 20px 22px;
+    transition: background 0.2s;
+  }
+
+  .twin-metric:hover { background: #efefef; }
+
+  .twin-metric-label {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .twin-metric-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    color: #000000;
+    font-weight: 500;
+  }
+
+  .twin-metric-sub {
+    font-size: 11px;
+    color: var(--amber);
+    margin-top: 3px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .twin-chart {
+    padding: 22px;
+    border-top: 1px solid var(--border);
+  }
+
+  .twin-chart-label {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .twin-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 60px;
+  }
+
+  .twin-bar {
+    flex: 1;
+    background: linear-gradient(to top, #1a3a6b, rgba(26,58,107,0.2));
+    border-radius: 3px 3px 0 0;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    animation: growBar 1s ease-out forwards;
+    transform-origin: bottom;
+  }
+
+  @keyframes growBar {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
+  }
+
+  .twin-recs {
+    padding: 0 22px 22px;
+  }
+
+  .twin-rec {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 300;
+  }
+
+  .twin-rec:last-child { border-bottom: none; }
+
+  .twin-rec-icon {
+    color: var(--amber);
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .twin-rec-roi {
+    margin-left: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--green);
+  }
+
+  /* ─── FIVE AI SYSTEMS ─── */
+  #systems {
+    background: #f7f7f7;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .systems-bg {
+    position: absolute;
+    bottom: -100px; left: 50%;
+    transform: translateX(-50%);
+    width: 800px; height: 400px;
+    background: radial-gradient(ellipse, rgba(26,58,107,0.04) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  .systems-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: end;
+    margin-bottom: 64px;
+  }
+
+  .systems-quote {
+    background: #f2f2f2;
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--amber);
+    border-radius: 0 12px 12px 0;
+    padding: 28px 32px;
+    position: relative;
+    align-self: end;
+  }
+
+  .systems-quote p {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    color: var(--text-primary);
+    line-height: 1.65;
+    font-style: italic;
+    margin-bottom: 14px;
+  }
+
+  .systems-quote cite {
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--amber);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-style: normal;
+  }
+
+  .systems-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: rgba(0,0,0,0.08);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    position: relative;
+    z-index: 2;
+  }
+
+  .system-card {
+    background: #f4f4f4;
+    padding: 36px 28px;
+    position: relative;
+    transition: background 0.3s;
+    cursor: default;
+  }
+
+  .system-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--amber);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+
+  .system-card:hover { background: #efefef; }
+  .system-card:hover::after { transform: scaleX(1); }
+
+  .system-glyph {
+    font-size: 24px;
+    margin-bottom: 20px;
+    display: block;
+    color: var(--amber);
+    opacity: 0.8;
+  }
+
+  .system-card h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #000000;
+    margin-bottom: 12px;
+    line-height: 1.35;
+  }
+
+  .system-card p {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  .system-num {
+    position: absolute;
+    top: 20px; right: 20px;
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    color: var(--amber);
+    opacity: 0.15;
+    font-weight: 400;
+  }
+
+  /* ─── HOW IT WORKS ─── */
+  #how {
+    background: #f7f7f7;
+  }
+
+  .steps-container {
+    margin-top: 64px;
+    position: relative;
+  }
+
+  .steps-line {
+    position: absolute;
+    top: 32px;
+    left: 32px;
+    right: 32px;
+    height: 1px;
+    background: linear-gradient(90deg, var(--amber) 0%, rgba(26,58,107,0.2) 60%, transparent 100%);
+  }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    position: relative;
+  }
+
+  .step-card {
+    background: #f2f2f2;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px 24px;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+  .step-card:hover {
+    border-color: var(--border-warm);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  }
+
+  .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px; height: 40px;
+    background: #ffffff;
+    border: 1px solid var(--amber);
+    border-radius: 50%;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--amber);
+    margin-bottom: 20px;
+  }
+
+  .step-card h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: #000000;
+    margin-bottom: 10px;
+  }
+
+  .step-card p {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  .step-badge {
+    margin-top: 18px;
+    display: inline-block;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--green);
+    background: var(--green-dim);
+    border-radius: 4px;
+    padding: 3px 9px;
+  }
+
+  /* ─── SERVICES ─── */
+  #services {
+    background: #ffffff;
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-top: 56px;
+  }
+
+  .service-card {
+    background: #f2f2f2;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 36px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: all 0.3s ease;
+    cursor: default;
+  }
+
+  .service-card:hover {
+    border-color: var(--border-warm);
+    background: #efefef;
+  }
+
+  .service-icon {
+    font-size: 28px;
+    margin-bottom: 4px;
+  }
+
+  .service-card h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 17px;
+    font-weight: 500;
+    color: #000000;
+  }
+
+  .service-card p {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    font-weight: 300;
+    flex: 1;
+  }
+
+  .service-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .service-list li {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 300;
+  }
+
+  .service-list li::before {
+    content: '—';
+    color: var(--amber);
+    font-size: 11px;
+  }
+
+  /* ─── PRICING ─── */
+  #pricing {
+    background: #f7f7f7;
+  }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-top: 56px;
+    align-items: end;
+  }
+
+  .pricing-card {
+    background: #f2f2f2;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 28px;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+  .pricing-card.featured {
+    background: linear-gradient(160deg, rgba(26,58,107,0.08) 0%, #f2f2f2 100%);
+    border-color: var(--amber);
+    transform: scale(1.02);
+  }
+
+  .pricing-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--amber);
+    color: #000000;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+
+  .pricing-card:hover {
+    border-color: var(--border-warm);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  }
+
+  .pricing-tier {
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--amber);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .pricing-amount {
+    margin-bottom: 8px;
+  }
+
+  .pricing-amount .price {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    color: #000000;
+    font-weight: 500;
+  }
+
+  .pricing-amount .period {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-left: 4px;
+  }
+
+  .pricing-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  .pricing-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .pricing-features li {
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-weight: 300;
+    line-height: 1.4;
+  }
+
+  .pricing-features li::before {
+    content: '✓';
+    color: var(--amber);
+    font-size: 12px;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+
+  .pricing-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 13.5px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--amber);
+    background: transparent;
+    color: var(--amber);
+    letter-spacing: 0.02em;
+  }
+
+  .pricing-btn:hover {
+    background: var(--amber);
+    color: #ffffff;
+  }
+
+  .pricing-card.featured .pricing-btn {
+    background: var(--amber);
+    color: #ffffff;
+  }
+
+  .pricing-card.featured .pricing-btn:hover {
+    background: var(--amber-light);
+  }
+
+  /* ─── ROADMAP ─── */
+  #roadmap {
+    background: #ffffff;
+  }
+
+  .roadmap-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    margin-top: 60px;
+    align-items: start;
+  }
+
+  .roadmap-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+
+  .roadmap-timeline::before {
+    content: '';
+    position: absolute;
+    left: 16px;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--amber), transparent);
+  }
+
+  .timeline-item {
+    display: flex;
+    gap: 24px;
+    padding-bottom: 36px;
+    padding-left: 48px;
+    position: relative;
+  }
+
+  .timeline-dot {
+    position: absolute;
+    left: 9px;
+    top: 4px;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    border: 2px solid var(--amber);
+    background: #ffffff;
+    flex-shrink: 0;
+  }
+
+  .timeline-dot.active {
+    background: var(--amber);
+    box-shadow: 0 0 16px rgba(26,58,107,0.5);
+  }
+
+  .timeline-item h4 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: #000000;
+    margin-bottom: 5px;
+  }
+
+  .timeline-item p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  .timeline-phase {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--amber);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .roadmap-dashboard {
+    background: #f2f2f2;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .dashboard-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .dashboard-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: #000000;
+  }
+
+  .dashboard-status {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--amber);
+    background: var(--amber-dim);
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+
+  .dashboard-body {
+    padding: 28px 24px;
+  }
+
+  .dash-metric {
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .dash-metric:last-child { border-bottom: none; }
+
+  .dash-metric-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 300;
+  }
+
+  .dash-metric-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  .dash-metric-value.active {
+    color: var(--green);
+  }
+
+  /* ─── CASE STUDIES ─── */
+  #cases {
+    background: #f7f7f7;
+  }
+
+  .cases-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 56px;
+  }
+
+  .case-card {
+    background: #f2f2f2;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 36px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .case-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 80px; height: 80px;
+    background: radial-gradient(circle, rgba(26,58,107,0.06) 0%, transparent 70%);
+  }
+
+  .case-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--amber);
+    background: var(--amber-dim);
+    border: 1px solid var(--border-warm);
+    border-radius: 4px;
+    padding: 4px 10px;
+    margin-bottom: 20px;
+  }
+
+  .case-card h3 {
+    font-size: 18px;
+    color: #000000;
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+
+  .case-card p {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  .case-type {
+    margin-top: 20px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ─── CONTACT ─── */
+  #contact {
+    background: #ffffff;
+  }
+
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    margin-top: 60px;
+  }
+
+  .contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .contact-detail {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .contact-icon {
+    width: 36px; height: 36px;
+    background: var(--amber-dim);
+    border: 1px solid var(--border-warm);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .contact-detail h4 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #000000;
+    margin-bottom: 3px;
+  }
+
+  .contact-detail p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 300;
+  }
+
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 0.04em;
+  }
+
+  .form-input, .form-select, .form-textarea {
+    background: #f2f2f2;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+    font-weight: 300;
+  }
+
+  .form-input::placeholder, .form-textarea::placeholder {
+    color: var(--text-muted);
+  }
+
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--amber);
+  }
+
+  .form-select option { background: #f4f4f4; }
+
+  .form-textarea { resize: vertical; min-height: 110px; }
+
+  .form-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  /* ─── TRUST BAR ─── */
+  #trust {
+    background: #f4f4f4;
+    padding: 40px 48px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+  }
+
+  .trust-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .trust-label {
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .trust-items {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  .trust-item span:first-child {
+    font-size: 16px;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    background: #f4f4f4;
+    padding: 64px 48px 40px;
+    border-top: 1px solid rgba(0,0,0,0.08);
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: 48px;
+    margin-bottom: 48px;
+  }
+
+  .footer-brand p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 16px;
+    line-height: 1.7;
+    font-weight: 300;
+    max-width: 260px;
+  }
+
+  .footer-col h4 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+  .footer-col ul a {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 300;
+    transition: color 0.2s;
+  }
+
+  .footer-col ul a:hover { color: var(--text-secondary); }
+
+  .footer-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  .footer-legal {
+    display: flex;
+    gap: 24px;
+  }
+
+  .footer-legal a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-legal a:hover { color: var(--text-secondary); }
+
+  /* ─── PILOT BANNER ─── */
+  .pilot-banner {
+    background: linear-gradient(90deg, rgba(74,158,122,0.08), rgba(26,58,107,0.06));
+    border: 1px solid rgba(0,0,0,0.07);
+    border-radius: 12px;
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 56px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .pilot-banner-text {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .pilot-dot {
+    width: 8px; height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+    flex-shrink: 0;
+  }
+
+  .pilot-banner-text p {
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 400;
+  }
+
+  .pilot-banner-text span {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 1024px) {
+    nav { padding: 18px 24px; }
+    .nav-links { display: none; }
+    .nav-mobile-btn { display: block; }
+    section { padding: 72px 24px; }
+    #hero { padding: 100px 24px 80px; }
+    .hero-meta { left: 24px; right: 24px; bottom: 32px; }
+    .what-grid { grid-template-columns: 1fr; gap: 40px; }
+    .what-visual { height: 280px; }
+    .intel-grid { grid-template-columns: 1fr; }
+    .twin-grid { grid-template-columns: 1fr; gap: 48px; }
+    .systems-grid { grid-template-columns: repeat(2, 1fr); }
+    .systems-header { grid-template-columns: 1fr; gap: 32px; }
+    .steps-grid { grid-template-columns: repeat(2, 1fr); }
+    .steps-line { display: none; }
+    .services-grid { grid-template-columns: repeat(2, 1fr); }
+    .pricing-grid { grid-template-columns: repeat(2, 1fr); }
+    .pricing-card.featured { transform: none; }
+    .roadmap-grid { grid-template-columns: 1fr; }
+    .cases-grid { grid-template-columns: 1fr; }
+    .contact-grid { grid-template-columns: 1fr; gap: 48px; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+    .trust-inner { flex-direction: column; align-items: flex-start; gap: 20px; }
+    .divider { margin: 0 24px; }
+    footer { padding: 48px 24px 32px; }
+  }
+
+  @media (max-width: 600px) {
+    .steps-grid { grid-template-columns: 1fr; }
+    .services-grid { grid-template-columns: 1fr; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .systems-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr; }
+    .footer-bottom { flex-direction: column; gap: 12px; align-items: flex-start; }
+    .hero-actions { flex-direction: column; align-items: flex-start; }
+    .hero-scroll { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── NAV ─── -->
+<nav id="main-nav">
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-mark">V</div>
+    <span class="nav-logo-text">VIREON</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#what">Platform</a></li>
+    <li><a href="#intelligence">AI Intelligence</a></li>
+    <li><a href="#twin">Digital Twin</a></li>
+    <li><a href="#systems">AI Systems</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#contact" class="nav-cta">Request a Consultation</a></li>
+  </ul>
+  <button class="nav-mobile-btn" onclick="toggleMenu()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M3 12h18M3 6h18M3 18h18"/>
+    </svg>
+  </button>
+</nav>
+
+<!-- ─── HERO ─── -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+
+  <div class="hero-content">
+    <div class="hero-eyebrow reveal">Currently Onboarding UK Pilot Partners</div>
+    <h1 class="hero-h1 reveal reveal-delay-1">
+      Property Intelligence,<br><em>Powered by AI.</em>
+    </h1>
+    <p class="hero-sub reveal reveal-delay-2">
+      VIREON is the UK's AI-powered property and energy intelligence platform — helping homeowners, landlords, developers, and property professionals plan smarter retrofits, reduce energy waste, and future-proof their buildings.
+    </p>
+    <div class="hero-actions reveal reveal-delay-3">
+      <a href="#contact" class="btn-primary">
+        Request Early Access
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="#what" class="btn-secondary">
+        Explore the Platform
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-meta">
+    <div class="hero-status">
+      <div class="status-dot"></div>
+      Pilot onboarding: Open — UK residential &amp; commercial
+    </div>
+    <div class="hero-scroll">
+      <div class="scroll-line"></div>
+      Scroll
+    </div>
+  </div>
+</section>
+
+<!-- ─── TRUST BAR ─── -->
+<div id="trust">
+  <div class="trust-inner container">
+    <span class="trust-label">Built for the UK market</span>
+    <div class="trust-items">
+      <div class="trust-item"><span>🏠</span><span>Residential Properties</span></div>
+      <div class="trust-item"><span>🏢</span><span>Commercial Buildings</span></div>
+      <div class="trust-item"><span>⚡</span><span>Energy Performance</span></div>
+      <div class="trust-item"><span>🌱</span><span>Net Zero Alignment</span></div>
+      <div class="trust-item"><span>📊</span><span>AI-Driven Intelligence</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── WHAT VIREON DOES ─── -->
+<section id="what">
+  <div class="container">
+    <p class="section-eyebrow reveal">The Platform</p>
+    <h2 class="section-title reveal reveal-delay-1">What VIREON Does</h2>
+    <p class="section-lead reveal reveal-delay-2">A complete property intelligence layer — combining AI analysis with energy data, retrofit planning, and sustainability insight to help you make better decisions about the buildings you own, manage, or invest in.</p>
+
+    <div class="what-grid">
+      <div class="what-visual reveal reveal-delay-1">
+        <div class="what-visual-inner">
+          <div class="orbital-ring"><div class="orbital-dot"></div></div>
+          <div class="orbital-ring"><div class="orbital-dot"></div></div>
+          <div class="orbital-ring"><div class="orbital-dot"></div></div>
+          <div class="orbital-center">V</div>
+        </div>
+        <div class="what-visual-label">
+          <strong>System Status: Active</strong>
+          AI property analysis engine · Pilot phase
+        </div>
       </div>
-      <div style={{ fontSize: "0.78rem", color: "#6a8a6a", marginTop: "0.5rem", letterSpacing: "0.12em", textTransform: "uppercase" }}>
-        {label}
+
+      <div class="what-points">
+        <div class="what-point reveal">
+          <div class="what-icon">⚡</div>
+          <div>
+            <h3>Energy Performance Analysis</h3>
+            <p>Detailed AI-driven assessment of your property's energy efficiency. Understand performance gaps, consumption patterns, and cost reduction opportunities.</p>
+          </div>
+        </div>
+        <div class="what-point reveal reveal-delay-1">
+          <div class="what-icon">🔧</div>
+          <div>
+            <h3>Retrofit Intelligence</h3>
+            <p>Intelligent retrofit planning that prioritises improvements by ROI, disruption level, and environmental impact — tailored to your specific property.</p>
+          </div>
+        </div>
+        <div class="what-point reveal reveal-delay-2">
+          <div class="what-icon">🌱</div>
+          <div>
+            <h3>Sustainability Planning</h3>
+            <p>Clear, actionable pathways toward net zero. Align your property portfolio with UK regulatory standards and future EPC requirements.</p>
+          </div>
+        </div>
+        <div class="what-point reveal reveal-delay-3">
+          <div class="what-icon">📋</div>
+          <div>
+            <h3>Intelligence Reports</h3>
+            <p>Professional-grade property reports delivered digitally. Suitable for investors, mortgage applications, planning submissions, and portfolio management.</p>
+          </div>
+        </div>
       </div>
     </div>
-  );
-}
+  </div>
+</section>
 
-function useInView(threshold = 0.2) {
-  const ref = useRef<HTMLElement | null>(null);
-  const [inView, setInView] = useState(false);
-  useEffect(() => {
-    const obs = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) setInView(true);
-    }, { threshold });
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, [threshold]);
-  return [ref, inView] as const;
-}
+<div class="divider"></div>
 
-const GridOverlay = () => (
-  <div style={{
-    position: "absolute", inset: 0, pointerEvents: "none", zIndex: 1,
-    backgroundImage: `linear-gradient(rgba(120,200,100,0.03) 1px, transparent 1px),linear-gradient(90deg, rgba(120,200,100,0.03) 1px, transparent 1px)`,
-    backgroundSize: "60px 60px"
-  }} />
-);
+<!-- ─── AI INTELLIGENCE ─── -->
+<section id="intelligence">
+  <div class="container">
+    <div class="intel-header">
+      <p class="section-eyebrow reveal">AI Capabilities</p>
+      <h2 class="section-title reveal reveal-delay-1">Deep Property Intelligence</h2>
+      <p class="section-lead reveal reveal-delay-2">VIREON's intelligence engine processes property data, energy metrics, and environmental context to surface insights that were previously only available to specialist consultants.</p>
+    </div>
 
-const Orb = ({ x, y, size, color, opacity = 0.15 }: { x: string; y: string; size: string; color: string; opacity?: number }) => (
-  <div style={{
-    position: "absolute", left: x, top: y, width: size, height: size,
-    borderRadius: "50%", background: color, opacity,
-    filter: `blur(${parseInt(size) * 0.4}px)`,
-    pointerEvents: "none", zIndex: 0
-  }} />
-);
-
-function Section({ children, style = {}, id }: { children: React.ReactNode; style?: React.CSSProperties; id?: string }) {
-  const [ref, inView] = useInView(0.1);
-  return (
-    <section id={id} ref={ref as React.RefObject<HTMLElement>} style={{
-      opacity: inView ? 1 : 0,
-      transform: inView ? "translateY(0)" : "translateY(32px)",
-      transition: "opacity 0.8s ease, transform 0.8s ease",
-      ...style
-    }}>
-      {children}
-    </section>
-  );
-}
-
-function DashboardMock() {
-  const bars = [65, 82, 71, 94, 78, 88, 62, 97, 74, 85, 91, 79];
-  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const [ref, inView] = useInView(0.1);
-  return (
-    <div ref={ref as React.RefObject<HTMLDivElement>} style={{
-      background: "rgba(8,16,10,0.9)", border: "1px solid rgba(120,200,80,0.15)", borderRadius: "16px",
-      padding: "0", overflow: "hidden", boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(120,200,80,0.08)",
-      maxWidth: "900px", margin: "0 auto",
-      opacity: inView ? 1 : 0, transform: inView ? "translateY(0)" : "translateY(40px)",
-      transition: "opacity 1s ease 0.2s, transform 1s ease 0.2s",
-    }}>
-      <div style={{ background: "rgba(120,200,80,0.06)", borderBottom: "1px solid rgba(120,200,80,0.1)", padding: "14px 20px", display: "flex", alignItems: "center", gap: "10px" }}>
-        <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f57" }} />
-        <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#febc2e" }} />
-        <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#28c840" }} />
-        <span style={{ marginLeft: 12, fontSize: "0.72rem", color: "#4a7a4a", letterSpacing: "0.15em", textTransform: "uppercase" }}>VIREON Intelligence Platform — Building Analytics</span>
-      </div>
-      <div style={{ padding: "24px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "16px" }}>
-        {[
-          { label: "EPC Score", value: "A+", delta: "+2 grades", color: "#7bc95a" },
-          { label: "Energy Cost Saving", value: "£42k", delta: "+34% vs baseline", color: "#5ab8c9" },
-          { label: "Carbon Reduction", value: "67%", delta: "tCO₂e saved", color: "#c9a85a" },
-          { label: "Property Uplift", value: "£180k", delta: "+12.4% value", color: "#b85ac9" },
-        ].map((card, i) => (
-          <div key={i} style={{
-            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", padding: "16px",
-            opacity: inView ? 1 : 0, transform: inView ? "translateY(0)" : "translateY(16px)",
-            transition: `opacity 0.6s ease ${0.3 + i * 0.1}s, transform 0.6s ease ${0.3 + i * 0.1}s`
-          }}>
-            <div style={{ fontSize: "0.65rem", color: "#4a6a4a", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>{card.label}</div>
-            <div style={{ fontSize: "1.6rem", fontWeight: 700, color: card.color, fontFamily: "'DM Serif Display', serif", lineHeight: 1 }}>{card.value}</div>
-            <div style={{ fontSize: "0.7rem", color: "#5a7a5a", marginTop: 4 }}>{card.delta}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{ padding: "0 24px 24px" }}>
-        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "10px", padding: "20px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <span style={{ fontSize: "0.72rem", color: "#5a8a5a", letterSpacing: "0.1em", textTransform: "uppercase" }}>Energy Performance Score — 12 Month Trend</span>
-            <span style={{ fontSize: "0.65rem", color: "#3a5a3a", background: "rgba(120,200,80,0.08)", border: "1px solid rgba(120,200,80,0.15)", borderRadius: 4, padding: "2px 8px" }}>AI Optimised</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: "6px", height: "80px" }}>
-            {bars.map((h, i) => (
-              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                <div style={{ width: "100%", height: `${h}%`, background: `linear-gradient(180deg, rgba(120,200,80,0.8), rgba(60,140,40,0.3))`, borderRadius: "3px 3px 0 0", border: "1px solid rgba(120,200,80,0.2)", minHeight: 4 }} />
-                <span style={{ fontSize: "0.5rem", color: "#3a5a3a" }}>{months[i]}</span>
-              </div>
-            ))}
-          </div>
+    <div class="intel-grid reveal reveal-delay-1">
+      <div class="intel-card">
+        <span class="intel-number">01</span>
+        <h3>Energy Analysis Engine</h3>
+        <p>Processes EPC data, utility consumption, building fabric details, and environmental factors to generate a comprehensive energy performance profile with granular improvement recommendations.</p>
+        <div class="intel-tags">
+          <span class="intel-tag">EPC Analysis</span>
+          <span class="intel-tag">Heat Loss Modelling</span>
+          <span class="intel-tag">Cost Projection</span>
         </div>
       </div>
-      <div style={{ borderTop: "1px solid rgba(120,200,80,0.08)", padding: "16px 24px", display: "flex", gap: 12 }}>
-        {["Install heat pump — ROI 3.2 yrs", "Upgrade insulation — Save £8k/yr", "Solar PV 12kW — 72% self-sufficiency"].map((rec, i) => (
-          <div key={i} style={{ flex: 1, background: "rgba(120,200,80,0.05)", border: "1px solid rgba(120,200,80,0.12)", borderRadius: 8, padding: "10px 12px", fontSize: "0.68rem", color: "#7abc5a" }}>
-            <span style={{ color: "#4a7a3a", marginRight: 6 }}>▲</span>{rec}
-          </div>
-        ))}
+      <div class="intel-card">
+        <span class="intel-number">02</span>
+        <h3>Retrofit Intelligence</h3>
+        <p>AI-ranked improvement pathways based on your property's specific characteristics, budget parameters, and target outcomes. Prioritised by impact, cost-effectiveness, and regulatory compliance.</p>
+        <div class="intel-tags">
+          <span class="intel-tag">ROI Ranking</span>
+          <span class="intel-tag">Contractor Matching</span>
+          <span class="intel-tag">Phased Planning</span>
+        </div>
+      </div>
+      <div class="intel-card">
+        <span class="intel-number">03</span>
+        <h3>Sustainability Pathways</h3>
+        <p>Forward-looking analysis aligned to UK net zero targets and EPC regulatory trajectories. Model the financial and environmental impact of proposed improvements over 5, 10, and 20-year horizons.</p>
+        <div class="intel-tags">
+          <span class="intel-tag">Net Zero Modelling</span>
+          <span class="intel-tag">Regulatory Alignment</span>
+          <span class="intel-tag">Carbon Reporting</span>
+        </div>
+      </div>
+      <div class="intel-card">
+        <span class="intel-number">04</span>
+        <h3>Smart Recommendations</h3>
+        <p>Contextually aware suggestions that adapt to local retrofit markets, funding availability, material costs, and seasonal factors. Recommendations evolve as your property data is updated.</p>
+        <div class="intel-tags">
+          <span class="intel-tag">Grant Identification</span>
+          <span class="intel-tag">Local Pricing</span>
+          <span class="intel-tag">Live Updates</span>
+        </div>
       </div>
     </div>
-  );
-}
+  </div>
+</section>
 
-function UploadArea() {
-  const [dragging, setDragging] = useState(false);
-  const [files, setFiles] = useState<File[]>([]);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault(); setDragging(false);
-    setFiles(Array.from(e.dataTransfer.files).slice(0, 5));
-  };
-  return (
-    <div onDragOver={(e) => { e.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={handleDrop}
-      onClick={() => inputRef.current?.click()}
-      style={{ border: `2px dashed ${dragging ? "rgba(120,200,80,0.6)" : "rgba(120,200,80,0.2)"}`, borderRadius: 16, padding: "48px 32px", textAlign: "center", cursor: "pointer", background: dragging ? "rgba(120,200,80,0.05)" : "rgba(120,200,80,0.02)", transition: "all 0.3s ease" }}>
-      <input ref={inputRef} type="file" multiple style={{ display: "none" }} accept="image/*,video/*,.pdf,.doc,.docx" onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 5))} />
-      <div style={{ fontSize: "2.5rem", marginBottom: 16 }}>⬆</div>
-      <div style={{ fontSize: "1.1rem", fontWeight: 600, color: "#c8e8b8", marginBottom: 8 }}>Drop property files here or click to upload</div>
-      <div style={{ fontSize: "0.8rem", color: "#4a7a4a" }}>Accepts: Photos · Videos · Floor Plans · EPC Certificates · Utility Bills</div>
-      {files.length > 0 && (
-        <div style={{ marginTop: 20, display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-          {files.map((f, i) => (
-            <div key={i} style={{ background: "rgba(120,200,80,0.1)", border: "1px solid rgba(120,200,80,0.2)", borderRadius: 6, padding: "4px 12px", fontSize: "0.72rem", color: "#7abc5a" }}>✓ {f.name}</div>
-          ))}
+<!-- ─── DIGITAL TWIN ─── -->
+<section id="twin">
+  <div class="twin-bg-glow"></div>
+  <div class="container">
+    <div class="twin-grid">
+      <div class="twin-content">
+        <p class="section-eyebrow reveal">Digital Twin Technology</p>
+        <h2 class="section-title reveal reveal-delay-1">Every Building Becomes a Living Data Asset</h2>
+        <p class="section-lead reveal reveal-delay-2">VIREON constructs a full AI-powered energy simulation of your property — modelling thermal performance, building fabric, system efficiency, and occupancy patterns to surface intelligence that standard surveys simply cannot provide.</p>
+
+        <div class="twin-features">
+          <div class="twin-feature reveal reveal-delay-1">
+            <div class="twin-feature-icon">🏗️</div>
+            <div>
+              <h4>Thermal Envelope Modelling</h4>
+              <p>AI maps heat loss pathways through walls, roofs, windows, and floors using building physics simulation — identifying exactly where energy is escaping.</p>
+            </div>
+          </div>
+          <div class="twin-feature reveal reveal-delay-2">
+            <div class="twin-feature-icon">⚙️</div>
+            <div>
+              <h4>Systems Performance Analysis</h4>
+              <p>Heating, ventilation, hot water, and electrical systems are individually assessed against efficiency benchmarks and current UK standards.</p>
+            </div>
+          </div>
+          <div class="twin-feature reveal reveal-delay-3">
+            <div class="twin-feature-icon">📈</div>
+            <div>
+              <h4>Consumption Pattern Intelligence</h4>
+              <p>Utility data and occupancy patterns are overlaid onto the building model to identify waste, anomalies, and seasonal inefficiencies.</p>
+            </div>
+          </div>
+          <div class="twin-feature reveal reveal-delay-4">
+            <div class="twin-feature-icon">🔄</div>
+            <div>
+              <h4>Continuous Model Refinement</h4>
+              <p>As new data becomes available — new bills, post-retrofit readings, seasonal changes — the model self-updates to keep intelligence current.</p>
+            </div>
+          </div>
         </div>
-      )}
+      </div>
+
+      <div class="twin-visual reveal reveal-delay-2">
+        <div class="twin-card">
+          <div class="twin-card-header">
+            <span class="twin-card-title">VIREON Intelligence Platform — Building Analytics</span>
+            <span class="twin-card-live">AI Optimised</span>
+          </div>
+          <div class="twin-metrics">
+            <div class="twin-metric">
+              <div class="twin-metric-label">EPC Score</div>
+              <div class="twin-metric-value">A+</div>
+              <div class="twin-metric-sub">Target band</div>
+            </div>
+            <div class="twin-metric">
+              <div class="twin-metric-label">Energy Cost Saving</div>
+              <div class="twin-metric-value">Est. £42k</div>
+              <div class="twin-metric-sub">Projected annual</div>
+            </div>
+            <div class="twin-metric">
+              <div class="twin-metric-label">Carbon Reduction</div>
+              <div class="twin-metric-value">67%</div>
+              <div class="twin-metric-sub">tCO₂e modelled</div>
+            </div>
+            <div class="twin-metric">
+              <div class="twin-metric-label">Property Uplift</div>
+              <div class="twin-metric-value">+12%</div>
+              <div class="twin-metric-sub">Estimated value</div>
+            </div>
+          </div>
+          <div class="twin-chart">
+            <div class="twin-chart-label">Energy Performance Score — AI Modelled Projection</div>
+            <div class="twin-bars">
+              <div class="twin-bar" style="height:35%; animation-delay:0s"></div>
+              <div class="twin-bar" style="height:42%; animation-delay:0.05s"></div>
+              <div class="twin-bar" style="height:38%; animation-delay:0.1s"></div>
+              <div class="twin-bar" style="height:55%; animation-delay:0.15s"></div>
+              <div class="twin-bar" style="height:48%; animation-delay:0.2s"></div>
+              <div class="twin-bar" style="height:62%; animation-delay:0.25s"></div>
+              <div class="twin-bar" style="height:58%; animation-delay:0.3s"></div>
+              <div class="twin-bar" style="height:70%; animation-delay:0.35s"></div>
+              <div class="twin-bar" style="height:75%; animation-delay:0.4s"></div>
+              <div class="twin-bar" style="height:82%; animation-delay:0.45s"></div>
+              <div class="twin-bar" style="height:88%; animation-delay:0.5s"></div>
+              <div class="twin-bar" style="height:95%; animation-delay:0.55s"></div>
+            </div>
+          </div>
+          <div class="twin-recs">
+            <div class="twin-rec">
+              <span class="twin-rec-icon">▲</span>
+              Install heat pump — highest impact improvement
+              <span class="twin-rec-roi">ROI 3.2 yrs</span>
+            </div>
+            <div class="twin-rec">
+              <span class="twin-rec-icon">▲</span>
+              Upgrade wall insulation — significant heat loss reduction
+              <span class="twin-rec-roi">Save £8k/yr</span>
+            </div>
+            <div class="twin-rec">
+              <span class="twin-rec-icon">▲</span>
+              Solar PV 12kW — near self-sufficiency achievable
+              <span class="twin-rec-roi">72% self-suff.</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  );
-}
+  </div>
+</section>
 
-function Nav() {
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const h = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", h);
-    return () => window.removeEventListener("scroll", h);
-  }, []);
-  return (
-    <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, padding: "0 40px", height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between", background: scrolled ? "rgba(4,10,6,0.92)" : "transparent", backdropFilter: scrolled ? "blur(20px)" : "none", borderBottom: scrolled ? "1px solid rgba(120,200,80,0.1)" : "none", transition: "all 0.4s ease" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-          <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke="rgba(120,200,80,0.8)" strokeWidth="1.5" />
-          <polygon points="14,7 21,10.5 21,17.5 14,21 7,17.5 7,10.5" fill="rgba(120,200,80,0.15)" stroke="rgba(120,200,80,0.5)" strokeWidth="1" />
-          <circle cx="14" cy="14" r="2.5" fill="rgba(120,200,80,0.9)" />
-        </svg>
-        <span style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: "1.3rem", color: "#e8f8e0", letterSpacing: "0.05em" }}>VIREON</span>
+<div class="divider"></div>
+
+<!-- ─── FIVE AI SYSTEMS ─── -->
+<section id="systems">
+  <div class="systems-bg"></div>
+  <div class="container">
+    <div class="systems-header">
+      <div>
+        <p class="section-eyebrow reveal">Proprietary Technology</p>
+        <h2 class="section-title reveal reveal-delay-1">Five AI Systems.<br><em style="color:var(--amber);font-style:normal;">One Unified Platform.</em></h2>
+        <p class="section-lead reveal reveal-delay-2">VIREON's technology stack integrates building physics, machine learning, financial modelling, and market intelligence into a single coherent intelligence layer — purpose-built for the UK property market.</p>
       </div>
-      <div style={{ display: "flex", gap: "32px" }}>
-        {["Platform", "How It Works", "Technology", "Industries", "Roadmap"].map(item => (
-          <a key={item} href={`#${item.toLowerCase().replace(/\s+/g,"-")}`} style={{ fontSize: "0.78rem", color: "#5a8a5a", textDecoration: "none", letterSpacing: "0.08em", textTransform: "uppercase", transition: "color 0.2s" }}
-            onMouseEnter={e => (e.target as HTMLElement).style.color = "#a8d888"}
-            onMouseLeave={e => (e.target as HTMLElement).style.color = "#5a8a5a"}>{item}</a>
-        ))}
+      <div class="systems-quote reveal reveal-delay-2">
+        <p>"We're not building energy software. We're building the intelligence layer that every building needs to perform, comply, and appreciate in value."</p>
+        <cite>— VIREON Founding Team</cite>
       </div>
-      <div style={{ display: "flex", gap: 12 }}>
-        <button style={{ background: "transparent", border: "1px solid rgba(120,200,80,0.3)", color: "#7abc5a", borderRadius: 8, padding: "8px 20px", fontSize: "0.78rem", cursor: "pointer" }}>Sign In</button>
-        <button style={{ background: "rgba(120,200,80,0.15)", border: "1px solid rgba(120,200,80,0.4)", color: "#b8e898", borderRadius: 8, padding: "8px 20px", fontSize: "0.78rem", cursor: "pointer" }}>Get Access</button>
-      </div>
-    </nav>
-  );
-}
-
-export default function VireonApp() {
-  const [statsRef, statsInView] = useInView(0.3);
-
-  const techPillars = [
-    { icon: "◈", title: "Property Digital Twin", desc: "AI constructs a living 3D energy model of every building — tracking thermal performance, system efficiency, and occupancy patterns in real time." },
-    { icon: "⬡", title: "AI Optimisation Engine", desc: "Proprietary ML models trained on millions of data points identify inefficiencies and generate ranked, costed recommendations with financial projections." },
-    { icon: "⟁", title: "Retrofit Sequencing Intelligence", desc: "Determines the optimal order and timing of upgrades to maximise ROI, minimise disruption, and meet Net Zero compliance milestones." },
-    { icon: "◉", title: "Market Intelligence Layer", desc: "Correlates energy improvements with local property market data to calculate precise valuation uplift — linking EPC grades to actual sale premiums." },
-    { icon: "⬣", title: "Energy-to-Value Engine", desc: "Translates technical energy performance into financial language — IRR, NPV, payback periods, and asset value impact — for investors and decision-makers." },
-  ];
-
-  const steps = [
-    { n: "01", title: "Upload Property Data", desc: "Photos, floor plans, EPC certificates, utility bills. The more data, the sharper the intelligence." },
-    { n: "02", title: "AI Builds Digital Model", desc: "Our engine constructs a full energy simulation — thermal envelopes, systems, consumption patterns — within minutes." },
-    { n: "03", title: "Inefficiency Analysis", desc: "AI identifies every energy leak, system underperformance, and compliance gap against UK building standards." },
-    { n: "04", title: "Recommendations Generated", desc: "Prioritised, costed retrofit actions with ROI projections, carbon metrics, and value uplift estimates." },
-    { n: "05", title: "Retrofit Roadmap Delivered", desc: "A sequenced execution plan with contractor integration, funding route guidance, and milestone tracking." },
-    { n: "06", title: "Ongoing Monitoring", desc: "Live dashboards track performance vs projections. AI continuously refines recommendations as data grows." },
-  ];
-
-  const industries = [
-    { icon: "⌂", label: "Homeowners", desc: "Reduce energy bills, improve comfort, and increase property value with a personalised AI energy plan." },
-    { icon: "◈", label: "Property Investors", desc: "Portfolio-level analysis. Identify assets most at risk from EPC regulations and greatest uplift opportunity." },
-    { icon: "⬣", label: "Developers", desc: "Design net zero from the start. AI integration at planning stage reduces retrofit risk and maximises green premium." },
-    { icon: "⟁", label: "Estate Agencies", desc: "Differentiate listings with AI-verified energy intelligence. Turn EPC compliance into a sales advantage." },
-    { icon: "◉", label: "Commercial Buildings", desc: "MEES compliance, ESOS reporting, and NABERS ratings — automated and optimised by AI." },
-    { icon: "⬡", label: "Housing Associations", desc: "Prioritise stock upgrades, unlock ECO4 and Social Housing Decarbonisation Fund with data-driven applications." },
-    { icon: "▲", label: "Government & Public", desc: "Whole-street and estate-level retrofit planning with GIS integration and policy compliance mapping." },
-  ];
-
-  const roadmapItems = [
-    { phase: "Q1 2025", title: "MVP Launch", desc: "Core AI energy analysis engine. Single-property assessment. UK beta users." },
-    { phase: "Q3 2025", title: "Platform Expansion", desc: "Multi-property portfolio. Digital twin v2. API integrations with EPC register." },
-    { phase: "Q1 2026", title: "SaaS Scaling", desc: "Enterprise tier. White-label product. CRM integrations. Partner network." },
-    { phase: "Q3 2026", title: "Market Intelligence", desc: "Live property-to-energy valuation data. Lender and surveyor integrations." },
-    { phase: "2027", title: "European Expansion", desc: "EPBD compliance across EU markets. Localised AI models per jurisdiction." },
-  ];
-
-  return (
-    <div style={{ fontFamily: "'Syne', 'DM Sans', sans-serif", background: "#040a06", color: "#d0e8c0", minHeight: "100vh", overflowX: "hidden" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
-        *{box-sizing:border-box;margin:0;padding:0;}
-        html{scroll-behavior:smooth;}
-        ::-webkit-scrollbar{width:4px;}
-        ::-webkit-scrollbar-track{background:#040a06;}
-        ::-webkit-scrollbar-thumb{background:rgba(120,200,80,0.3);border-radius:2px;}
-        @keyframes float{0%,100%{transform:translateY(0px);}50%{transform:translateY(-12px);}}
-        @keyframes scan{0%{top:0%;opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{top:100%;opacity:0;}}
-        @keyframes ticker{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
-        @keyframes pulse-glow{0%,100%{opacity:0.4;transform:scale(1);}50%{opacity:0.7;transform:scale(1.05);}}
-        .hero-float{animation:float 7s ease-in-out infinite;}
-        .pulse{animation:pulse-glow 3s ease-in-out infinite;}
-        .scan-line{position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(120,200,80,0.6),transparent);animation:scan 4s linear infinite;pointer-events:none;z-index:2;}
-        .ticker-track{animation:ticker 30s linear infinite;display:flex;gap:64px;}
-        .btn-primary{background:rgba(120,200,80,0.15);border:1px solid rgba(120,200,80,0.5);color:#b8e898;padding:14px 32px;border-radius:10px;font-size:0.88rem;font-family:'Syne',sans-serif;cursor:pointer;letter-spacing:0.05em;font-weight:600;transition:all 0.25s ease;}
-        .btn-primary:hover{background:rgba(120,200,80,0.25);border-color:rgba(120,200,80,0.8);box-shadow:0 0 24px rgba(120,200,80,0.15);transform:translateY(-2px);}
-        .btn-ghost{background:transparent;border:1px solid rgba(120,200,80,0.2);color:#6a9a5a;padding:14px 32px;border-radius:10px;font-size:0.88rem;font-family:'Syne',sans-serif;cursor:pointer;letter-spacing:0.05em;transition:all 0.25s ease;}
-        .btn-ghost:hover{border-color:rgba(120,200,80,0.5);color:#a8d888;transform:translateY(-2px);}
-        .card-glass{background:rgba(255,255,255,0.025);border:1px solid rgba(120,200,80,0.1);border-radius:16px;transition:all 0.3s ease;}
-        .card-glass:hover{background:rgba(255,255,255,0.04);border-color:rgba(120,200,80,0.25);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,0.4);}
-        .tag-pill{background:rgba(120,200,80,0.08);border:1px solid rgba(120,200,80,0.2);color:#7abc5a;padding:4px 14px;border-radius:100px;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;display:inline-block;}
-        input,textarea,select{background:rgba(255,255,255,0.03)!important;border:1px solid rgba(120,200,80,0.15)!important;color:#c0e0a8!important;border-radius:10px!important;padding:12px 16px!important;font-family:'Syne',sans-serif!important;font-size:0.88rem!important;width:100%!important;outline:none!important;transition:border-color 0.2s!important;}
-        input:focus,textarea:focus,select:focus{border-color:rgba(120,200,80,0.4)!important;}
-        input::placeholder,textarea::placeholder{color:#3a5a3a!important;}
-      `}</style>
-
-      <Nav />
-
-      {/* HERO */}
-      <div style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", overflow: "hidden" }}>
-        <GridOverlay />
-        <Orb x="-10%" y="10%" size="600px" color="radial-gradient(circle, rgba(80,160,50,0.4), transparent)" opacity={1} />
-        <Orb x="60%" y="-5%" size="500px" color="radial-gradient(circle, rgba(40,100,120,0.3), transparent)" opacity={1} />
-        <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}><div className="scan-line" /></div>
-        <div style={{ position: "relative", zIndex: 2, maxWidth: "1200px", margin: "0 auto", padding: "120px 40px 80px", width: "100%" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "80px", alignItems: "center" }}>
-            <div>
-              <div className="tag-pill" style={{ marginBottom: 24 }}>AI PropTech · CleanTech · SaaS</div>
-              <h1 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: "clamp(2.8rem, 5vw, 4.2rem)", fontWeight: 400, lineHeight: 1.1, color: "#e8f8e0", marginBottom: 24 }}>
-                Property Intelligence,<br /><em style={{ color: "#7abc5a", fontStyle: "italic" }}>Engineered by AI.</em>
-              </h1>
-              <p style={{ fontSize: "1.05rem", color: "#5a8a5a", lineHeight: 1.8, marginBottom: 36, maxWidth: "480px" }}>
-                VIREON is the AI-powered Property Energy Intelligence Platform that helps owners, investors, and organisations transform buildings through digital twin simulation, retrofit intelligence, and automated energy optimisation.
-              </p>
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 48 }}>
-                <button className="btn-primary" onClick={() => document.getElementById("upload")?.scrollIntoView({behavior:"smooth"})}>Upload Property</button>
-                <button className="btn-primary" onClick={() => document.getElementById("how-it-works")?.scrollIntoView({behavior:"smooth"})}>Get AI Assessment</button>
-                <button className="btn-ghost" onClick={() => document.getElementById("contact")?.scrollIntoView({behavior:"smooth"})}>Book Consultation →</button>
-              </div>
-              <div style={{ display: "flex", gap: "32px", paddingTop: 24, borderTop: "1px solid rgba(120,200,80,0.1)" }}>
-                {[["12,000+","Properties Analysed"],["£340M+","Value Modelled"],["92%","Avg Carbon Reduction"]].map(([val, lbl]) => (
-                  <div key={lbl}>
-                    <div style={{ fontSize: "1.2rem", fontWeight: 700, color: "#b8e898", fontFamily: "'DM Serif Display',serif" }}>{val}</div>
-                    <div style={{ fontSize: "0.68rem", color: "#3a5a3a", letterSpacing: "0.08em", textTransform: "uppercase", marginTop: 2 }}>{lbl}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="hero-float" style={{ position: "relative" }}>
-              <div style={{ position: "relative", width: "100%", paddingBottom: "100%", maxWidth: 460, margin: "0 auto" }}>
-                <svg viewBox="0 0 460 460" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
-                  <circle cx="230" cy="230" r="200" fill="none" stroke="rgba(120,200,80,0.06)" strokeWidth="1" />
-                  <circle cx="230" cy="230" r="160" fill="none" stroke="rgba(120,200,80,0.08)" strokeWidth="1" strokeDasharray="4 8" />
-                  <circle cx="230" cy="230" r="120" fill="none" stroke="rgba(120,200,80,0.12)" strokeWidth="1" />
-                  {[0,60,120,180,240,300].map((angle, i) => {
-                    const r = 170; const x = 230 + r * Math.cos((angle * Math.PI) / 180); const y = 230 + r * Math.sin((angle * Math.PI) / 180);
-                    return (<g key={i}><line x1="230" y1="230" x2={x} y2={y} stroke="rgba(120,200,80,0.1)" strokeWidth="1" /><circle cx={x} cy={y} r="6" fill="rgba(120,200,80,0.3)" /></g>);
-                  })}
-                  <rect x="170" y="140" width="40" height="120" rx="2" fill="rgba(120,200,80,0.08)" stroke="rgba(120,200,80,0.25)" strokeWidth="1" />
-                  <rect x="215" y="110" width="60" height="150" rx="2" fill="rgba(120,200,80,0.1)" stroke="rgba(120,200,80,0.3)" strokeWidth="1" />
-                  <rect x="280" y="150" width="35" height="110" rx="2" fill="rgba(120,200,80,0.07)" stroke="rgba(120,200,80,0.2)" strokeWidth="1" />
-                  <circle cx="230" cy="230" r="30" fill="rgba(120,200,80,0.08)" stroke="rgba(120,200,80,0.4)" strokeWidth="1.5" className="pulse" />
-                  <circle cx="230" cy="230" r="12" fill="rgba(120,200,80,0.6)" />
-                  {([[200,180,"£42k"],[270,200,"A+EPC"],[200,280,"67%CO₂"],[270,270,"ROI 3.2y"]] as [number,number,string][]).map(([x,y,label],i) => (
-                    <g key={i}>
-                      <line x1="230" y1="230" x2={x} y2={y} stroke="rgba(120,200,80,0.25)" strokeWidth="1" strokeDasharray="3 4" />
-                      <rect x={x - 20} y={y - 10} width="50" height="20" rx="4" fill="rgba(8,20,10,0.9)" stroke="rgba(120,200,80,0.3)" strokeWidth="1" />
-                      <text x={x + 5} y={y + 4} fill="#7abc5a" fontSize="7" textAnchor="middle" fontFamily="DM Mono">{label}</text>
-                    </g>
-                  ))}
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* TICKER */}
-      <div style={{ borderTop: "1px solid rgba(120,200,80,0.08)", borderBottom: "1px solid rgba(120,200,80,0.08)", padding: "14px 0", overflow: "hidden", background: "rgba(120,200,80,0.03)" }}>
-        <div className="ticker-track">
-          {[...Array(2)].flatMap((_, ai) => ["Digital Twin Simulation","AI Energy Optimisation","EPC Compliance Automation","Retrofit ROI Modelling","Carbon Reduction Intelligence","Property Value Uplift","Net Zero Planning","Building Performance Analytics","MEES Compliance","Whole-House Retrofits"].map((t, i) => (
-            <span key={`${ai}-${i}`} style={{ fontSize: "0.72rem", color: "#3a6a3a", letterSpacing: "0.15em", textTransform: "uppercase", whiteSpace: "nowrap" }}>{t} <span style={{ color: "rgba(120,200,80,0.3)", margin: "0 8px" }}>◆</span></span>
-          )))}
-        </div>
-      </div>
-
-      {/* STATS */}
-      <Section id="platform" style={{ padding: "100px 40px", position: "relative" }}>
-        <GridOverlay />
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 60 }}>
-            <div className="tag-pill" style={{ marginBottom: 16 }}>Platform Metrics</div>
-            <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: "clamp(2rem, 4vw, 3rem)", color: "#e8f8e0", fontWeight: 400 }}>Intelligence at Scale</h2>
-          </div>
-          <div ref={statsRef as React.RefObject<HTMLDivElement>} style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 40 }}>
-            <AnimatedStat value={12000} suffix="+" label="Properties Analysed" started={statsInView} />
-            <AnimatedStat value={340} suffix="M+" label="Value Modelled (£)" started={statsInView} />
-            <AnimatedStat value={92} suffix="%" label="Avg Carbon Reduction" started={statsInView} />
-            <AnimatedStat value={4200} suffix="+" label="AI Recommendations" started={statsInView} />
-          </div>
-        </div>
-      </Section>
-
-      {/* DASHBOARD */}
-      <Section style={{ padding: "60px 40px 100px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <div className="tag-pill" style={{ marginBottom: 16 }}>Live Platform Preview</div>
-            <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: "clamp(2rem, 4vw, 2.8rem)", color: "#e8f8e0", fontWeight: 400, marginBottom: 16 }}>The Intelligence Dashboard</h2>
-            <p style={{ color: "#4a7a4a", fontSize: "0.95rem", maxWidth: 500, margin: "0 auto" }}>Every building becomes a data asset. VIREON surfaces the intelligence your portfolio needs.</p>
-          </div>
-          <DashboardMock />
-        </div>
-      </Section>
-
-      {/* HOW IT WORKS */}
-      <Section id="how-it-works" style={{ padding: "100px 40px", background: "rgba(120,200,80,0.02)", position: "relative" }}>
-        <GridOverlay />
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 72 }}>
-            <div className="tag-pill" style={{ marginBottom: 16 }}>Workflow</div>
-            <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: "clamp(2rem, 4vw, 3rem)", color: "#e8f8e0", fontWeight: 400, marginBottom: 16 }}>How VIREON Works</h2>
-            <p style={{ color: "#4a7a4a", maxWidth: 500, margin: "0 auto" }}>From raw property data to actionable intelligence in minutes, not months.</p>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
-            {steps.map((step, i) => (
-              <div key={i} className="card-glass" style={{ padding: 28, position: "relative", overflow: "hidden" }}>
-                <div style={{ position: "absolute", top: -10, right: -10, fontSize: "4rem", fontFamily: "'DM Serif Display',serif", color: "rgba(120,200,80,0.05)", fontWeight: 400, lineHeight: 1, pointerEvents: "none", userSelect: "none" }}>{step.n}</div>
-                <div style={{ fontSize: "0.7rem", color: "#3a6a3a", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 12 }}>Step {step.n}</div>
-                <h3 style={{ fontSize: "1.05rem", color: "#c8e8b0", fontWeight: 600, marginBottom: 10 }}>{step.title}</h3>
-                <p style={{ fontSize: "0.82rem", color: "#4a6a4a", lineHeight: 1.75 }}>{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Section>
-
-      {/* TECHNOLOGY */}
-      <Section id="technology" style={{ padding: "100px 40px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "80px", alignItems: "start" }}>
-            <div>
-              <div className="tag-pill" style={{ marginBottom: 16 }}>Core Technology</div>
-              <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: "clamp(2rem, 4vw, 3rem)", color: "#e8f8e0", fontWeight: 400, lineHeight: 1.2, marginBottom: 24 }}>Five AI Systems.<br /><em style={{ color: "#7abc5a" }}>One Unified Platform.</em></h2>
-              <p style={{ color: "#4a7a4a", lineHeight: 1.8, marginBottom: 32 }}>VIREON&apos;s proprietary technology stack integrates building physics, machine learning, financial modelling, and market intelligence into a single coherent intelligence layer.</p>
-              <div style={{ borderLeft: "1px solid rgba(120,200,80,0.2)", paddingLeft: 20 }}>
-                <p style={{ fontSize: "0.82rem", color: "#3a6a3a", lineHeight: 1.8 }}>&quot;We&apos;re not building energy software. We&apos;re building the intelligence layer that every building needs to perform, comply, and appreciate in value.&quot;</p>
-                <p style={{ fontSize: "0.72rem", color: "#2a4a2a", marginTop: 8, letterSpacing: "0.08em" }}>— VIREON FOUNDING TEAM</p>
-              </div>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {techPillars.map((pillar, i) => (
-                <div key={i} className="card-glass" style={{ padding: "20px 24px", display: "flex", gap: 16, alignItems: "flex-start" }}>
-                  <div style={{ fontSize: "1.3rem", color: "rgba(120,200,80,0.6)", lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{pillar.icon}</div>
-                  <div>
-                    <div style={{ fontSize: "0.88rem", color: "#c8e8b0", fontWeight: 600, marginBottom: 4 }}>{pillar.title}</div>
-                    <div style={{ fontSize: "0.78rem", color: "#3a5a3a", lineHeight: 1.7 }}>{pillar.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </Section>
-
-      {/* UPLOAD */}
-      <Section id="upload" style={{ padding: "100px 40px", background: "rgba(120,200,80,0.02)" }}>
-        <div style={{ maxWidth: 800, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <div className="tag-pill" style={{ marginBottom: 16 }}>Upload Property</div>
-            <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: "clamp(2rem, 4vw, 2.8rem)", color: "#e8f8e0", fontWeight: 400, marginBottom: 16 }}>Start Your AI Assessment</h2>
-            <p style={{ color: "#4a7a4a", maxWidth: 480, margin: "0 auto" }}>Upload your property files and our AI engine will build a full energy intelligence report within minutes.</p>
-          </div>
-          <div className="card-glass" style={{ padding: 40 }}>
-            <UploadArea />
-            <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-              <div><label style={{ fontSize: "0.72rem", color: "#3a6a3a", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Property Address</label><input type="text" placeholder="123 Example Street, London, E1 6RF" /></div>
-              <div><label style={{ fontSize: "0.72rem", color: "#3a6a3a", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Property Type</label>
-                <select><option value="">Select property type...</option><option>Residential — Detached</option><option>Residential — Semi-detached</option><option>Residential — Flat/Apartment</option><option>Commercial — Office</option><option>Commercial — Retail</option><option>Industrial</option></select>
-              </div>
-              <div><label style={{ fontSize: "0.72rem", color: "#3a6a3a", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Your Name</label><input type="text" placeholder="Full name" /></div>
-              <div><label style={{ fontSize: "0.72rem", color: "#3a6a3a", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Email Address</label><input type="email" placeholder="you@example.com" /></div>
-            </div>
-            <button className="btn-primary" style={{ marginTop: 24, width: "100%", padding: "16px", fontSize: "0.95rem" }}>Run AI Energy Analysis →</button>
-            <p style={{ textAlign: "center", fontSize: "0.7rem", color: "#2a4a2a", marginTop: 12 }}>Secure upload · GDPR compliant · Results within 24 hours</p>
-          </div>
-        </div>
-      </Section>
-
-      {/* INDUSTRIES */}
-      <Section id="industries" style={{ padding: "100px 40px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 64 }}>
-            <div className="tag-pill" style={{ marginBottom: 16 }}>Industries Served</div>
-            <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: "clamp(2rem, 4vw, 3rem)", color: "#e8f8e0", fontWeight: 400, marginBottom: 16 }}>Built for Every Property Stakeholder</h2>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
-            {industries.map((ind, i) => (
-              <div key={i} className="card-glass" style={{ padding: 24 }}>
-                <div style={{ fontSize: "1.5rem", marginBottom: 12, color: "rgba(120,200,80,0.5)" }}>{ind.icon}</div>
-                <div style={{ fontSize: "0.95rem", color: "#c8e8b0", fontWeight: 600, marginBottom: 8 }}>{ind.label}</div>
-                <div style={{ fontSize: "0.78rem", color: "#3a5a3a", lineHeight: 1.7 }}>{ind.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Section>
-
-      {/* TESTIMONIALS */}
-      <Section style={{ padding: "100px 40px", background: "rgba(120,200,80,0.02)" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 64 }}>
-            <div className="tag-pill" style={{ marginBottom: 16 }}>Social Proof</div>
-            <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: "clamp(2rem, 4vw, 3rem)", color: "#e8f8e0", fontWeight: 400 }}>What Our Users Say</h2>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
-            {[
-              { quote: "VIREON identified £68,000 in energy savings we had completely missed. The ROI modelling alone justified the investment.", name: "James Thornton", role: "Portfolio Director, Apex Capital Properties" },
-              { quote: "The AI retrofit sequencing is unlike anything in the market. It told us exactly which interventions to do first — and why. Transformed our development pipeline.", name: "Sarah Okonkwo", role: "Sustainability Lead, Meridian Developments" },
-              { quote: "Finally a platform that speaks the language of investors, not just engineers. VIREON connects energy improvements directly to asset value.", name: "Mark Ellis MRICS", role: "Director, Green Asset Valuation" },
-            ].map((t, i) => (
-              <div key={i} className="card-glass" style={{ padding: 28 }}>
-                <div style={{ fontSize: "1.5rem", color: "rgba(120,200,80,0.3)", marginBottom: 16, lineHeight: 1 }}>&quot;</div>
-                <p style={{ fontSize: "0.85rem", color: "#5a8a5a", lineHeight: 1.8, marginBottom: 20 }}>{t.quote}</p>
-                <div style={{ borderTop: "1px solid rgba(120,200,80,0.1)", paddingTop: 16 }}>
-                  <div style={{ fontSize: "0.85rem", color: "#a8d888", fontWeight: 600 }}>{t.name}</div>
-                  <div style={{ fontSize: "0.72rem", color: "#3a5a3a", marginTop: 2 }}>{t.role}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Section>
-
-      {/* ROADMAP */}
-      <Section id="roadmap" style={{ padding: "100px 40px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 64 }}>
-            <div className="tag-pill" style={{ marginBottom: 16 }}>Company Roadmap</div>
-            <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: "clamp(2rem, 4vw, 3rem)", color: "#e8f8e0", fontWeight: 400, marginBottom: 16 }}>Building the Future</h2>
-          </div>
-          <div style={{ position: "relative" }}>
-            <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 1, background: "linear-gradient(180deg, rgba(120,200,80,0.5), rgba(120,200,80,0.05))", transform: "translateX(-50%)" }} />
-            {roadmapItems.map((item, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: i % 2 === 0 ? "flex-end" : "flex-start", marginBottom: 48, position: "relative" }}>
-                <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", width: 12, height: 12, borderRadius: "50%", background: "#7abc5a", zIndex: 2, boxShadow: "0 0 16px rgba(120,200,80,0.5)" }} />
-                <div className="card-glass" style={{ width: "44%", padding: 24, marginRight: i % 2 === 0 ? "6%" : 0, marginLeft: i % 2 !== 0 ? "6%" : 0 }}>
-                  <div className="tag-pill" style={{ marginBottom: 12, fontSize: "0.65rem" }}>{item.phase}</div>
-                  <div style={{ fontSize: "1rem", color: "#c8e8b0", fontWeight: 600, marginBottom: 8 }}>{item.title}</div>
-                  <div style={{ fontSize: "0.8rem", color: "#3a5a3a", lineHeight: 1.7 }}>{item.desc}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Section>
-
-      {/* INVESTOR */}
-      <Section style={{ padding: "100px 40px", background: "rgba(120,200,80,0.02)", position: "relative", overflow: "hidden" }}>
-        <GridOverlay />
-        <Orb x="70%" y="20%" size="400px" color="radial-gradient(circle, rgba(80,160,50,0.2), transparent)" opacity={1} />
-        <div style={{ maxWidth: 1200, margin: "0 auto", position: "relative", zIndex: 1 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
-            <div>
-              <div className="tag-pill" style={{ marginBottom: 16 }}>Investor Grade</div>
-              <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: "clamp(2rem, 4vw, 3rem)", color: "#e8f8e0", fontWeight: 400, lineHeight: 1.2, marginBottom: 24 }}>Built for Scale.<br /><em style={{ color: "#7abc5a" }}>Designed to Last.</em></h2>
-              <p style={{ color: "#4a7a4a", lineHeight: 1.8, marginBottom: 32 }}>VIREON is architected as a global AI infrastructure company — not a services business. Our proprietary data flywheel, AI models, and API ecosystem create durable competitive moats as the platform scales.</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                {["AI-first architecture with proprietary training data","SaaS model with enterprise, API, and white-label tiers","UK EPC regulation tailwinds (MEES deadline pressure)","£350B UK retrofit market opportunity","UK Innovator Founder Visa — endorsed sector"].map((item, i) => (
-                  <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#7abc5a", marginTop: 7, flexShrink: 0 }} />
-                    <span style={{ fontSize: "0.85rem", color: "#5a8a5a" }}>{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-              {[
-                { icon: "◈", title: "Defensible AI", desc: "Proprietary models trained on UK property data unavailable to competitors." },
-                { icon: "⬡", title: "API Ecosystem", desc: "Developer-first architecture enables rapid partner integrations." },
-                { icon: "⟁", title: "Regulation Driven", desc: "MEES 2025–2030 creates mandatory demand for every UK commercial landlord." },
-                { icon: "◉", title: "Global Expansion", desc: "EU EPBD creates equivalent demand across 27 markets from 2026." },
-              ].map((card, i) => (
-                <div key={i} className="card-glass" style={{ padding: 20 }}>
-                  <div style={{ fontSize: "1.2rem", color: "rgba(120,200,80,0.5)", marginBottom: 10 }}>{card.icon}</div>
-                  <div style={{ fontSize: "0.88rem", color: "#c8e8b0", fontWeight: 600, marginBottom: 6 }}>{card.title}</div>
-                  <div style={{ fontSize: "0.75rem", color: "#3a5a3a", lineHeight: 1.65 }}>{card.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </Section>
-
-      {/* CONTACT */}
-      <Section id="contact" style={{ padding: "100px 40px" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 56 }}>
-            <div className="tag-pill" style={{ marginBottom: 16 }}>Get In Touch</div>
-            <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: "clamp(2rem, 4vw, 3rem)", color: "#e8f8e0", fontWeight: 400, marginBottom: 16 }}>Book a Consultation</h2>
-            <p style={{ color: "#4a7a4a", maxWidth: 480, margin: "0 auto" }}>Speak with our team about your property portfolio, investment strategy, or partnership opportunities.</p>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48 }}>
-            <div className="card-glass" style={{ padding: 36 }}>
-              <h3 style={{ fontSize: "1rem", color: "#c8e8b0", marginBottom: 24, fontWeight: 600 }}>Send a Message</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <div><label style={{ fontSize: "0.72rem", color: "#3a6a3a", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Full Name</label><input type="text" placeholder="Your full name" /></div>
-                <div><label style={{ fontSize: "0.72rem", color: "#3a6a3a", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Email</label><input type="email" placeholder="work@company.com" /></div>
-                <div><label style={{ fontSize: "0.72rem", color: "#3a6a3a", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Organisation</label><input type="text" placeholder="Company or organisation" /></div>
-                <div><label style={{ fontSize: "0.72rem", color: "#3a6a3a", letterSpacing: "0.1em", textTransform: "uppercase", display: "block", marginBottom: 8 }}>Message</label><textarea rows={4} placeholder="Tell us about your property portfolio or requirements..." style={{ resize: "vertical" as const }} /></div>
-                <button className="btn-primary" style={{ width: "100%" }}>Send Message →</button>
-              </div>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-              <div className="card-glass" style={{ padding: 24 }}><div style={{ fontSize: "0.72rem", color: "#3a6a3a", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Email</div><div style={{ color: "#7abc5a", fontSize: "0.9rem" }}>hello@vireonai.uk</div></div>
-              <div className="card-glass" style={{ padding: 24 }}><div style={{ fontSize: "0.72rem", color: "#3a6a3a", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>For Investors</div><div style={{ color: "#7abc5a", fontSize: "0.9rem" }}>investors@vireonai.uk</div></div>
-              <div className="card-glass" style={{ padding: 24 }}><div style={{ fontSize: "0.72rem", color: "#3a6a3a", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Location</div><div style={{ color: "#5a8a5a", fontSize: "0.85rem" }}>London, United Kingdom</div></div>
-              <div className="card-glass" style={{ padding: 24 }}>
-                <div style={{ fontSize: "0.72rem", color: "#3a6a3a", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Newsletter</div>
-                <div style={{ display: "flex", gap: 8 }}><input type="email" placeholder="your@email.com" style={{ flex: 1 }} /><button className="btn-primary" style={{ padding: "12px 16px", fontSize: "0.75rem" }}>→</button></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Section>
-
-      {/* CTA */}
-      <section style={{ padding: "80px 40px", position: "relative", overflow: "hidden" }}>
-        <Orb x="10%" y="-20%" size="600px" color="radial-gradient(circle, rgba(80,160,50,0.3), transparent)" opacity={1} />
-        <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center", position: "relative", zIndex: 1 }}>
-          <h2 style={{ fontFamily: "'DM Serif Display',serif", fontSize: "clamp(2.2rem, 5vw, 3.5rem)", color: "#e8f8e0", fontWeight: 400, lineHeight: 1.2, marginBottom: 24 }}>Your Buildings Are Smarter<br /><em style={{ color: "#7abc5a" }}>Than You Think.</em></h2>
-          <p style={{ color: "#4a7a4a", fontSize: "1.05rem", marginBottom: 40, lineHeight: 1.8 }}>Join thousands of property professionals using VIREON to unlock the intelligence hidden in their assets.</p>
-          <div style={{ display: "flex", gap: 16, justifyContent: "center" }}>
-            <button className="btn-primary" style={{ fontSize: "1rem", padding: "16px 40px" }} onClick={() => document.getElementById("upload")?.scrollIntoView({behavior:"smooth"})}>Start Free Assessment</button>
-            <button className="btn-ghost" style={{ fontSize: "1rem", padding: "16px 40px" }} onClick={() => document.getElementById("contact")?.scrollIntoView({behavior:"smooth"})}>Talk to Our Team</button>
-          </div>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer style={{ borderTop: "1px solid rgba(120,200,80,0.1)", padding: "60px 40px 32px", background: "rgba(0,0,0,0.3)" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 48, marginBottom: 48 }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-                <svg width="22" height="22" viewBox="0 0 28 28" fill="none"><polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="none" stroke="rgba(120,200,80,0.7)" strokeWidth="1.5" /><circle cx="14" cy="14" r="3" fill="rgba(120,200,80,0.8)" /></svg>
-                <span style={{ fontFamily: "'DM Serif Display',serif", fontSize: "1.1rem", color: "#c8e8b0" }}>VIREON</span>
-              </div>
-              <p style={{ fontSize: "0.8rem", color: "#3a5a3a", lineHeight: 1.8, maxWidth: 260 }}>AI-powered Property Energy Intelligence Platform. Helping property owners, investors, and organisations build smarter, more sustainable assets.</p>
-              <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
-                {["in", "𝕏", "gh"].map((s, i) => (
-                  <div key={i} style={{ width: 32, height: 32, borderRadius: 6, background: "rgba(120,200,80,0.08)", border: "1px solid rgba(120,200,80,0.15)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.7rem", color: "#4a7a4a" }}>{s}</div>
-                ))}
-              </div>
-            </div>
-            {[
-              { title: "Platform", links: ["AI Assessment","Digital Twin","Retrofit Planner","Portfolio Analytics","API Access"] },
-              { title: "Company", links: ["About VIREON","Technology","Careers","Press","Investors"] },
-              { title: "Legal", links: ["Privacy Policy","Terms of Service","Cookie Policy","GDPR","Security"] },
-            ].map((col, i) => (
-              <div key={i}>
-                <div style={{ fontSize: "0.7rem", color: "#3a6a3a", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 16 }}>{col.title}</div>
-                {col.links.map(link => (
-                  <div key={link} style={{ fontSize: "0.82rem", color: "#2a4a2a", marginBottom: 10, cursor: "pointer", transition: "color 0.2s" }}
-                    onMouseEnter={e => (e.target as HTMLElement).style.color = "#7abc5a"}
-                    onMouseLeave={e => (e.target as HTMLElement).style.color = "#2a4a2a"}>{link}</div>
-                ))}
-              </div>
-            ))}
-          </div>
-          <div style={{ borderTop: "1px solid rgba(120,200,80,0.07)", paddingTop: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontSize: "0.72rem", color: "#1a3a1a" }}>© 2025 VIREON AI Ltd. Registered in England & Wales. All rights reserved.</div>
-            <div style={{ fontSize: "0.72rem", color: "#1a3a1a" }}>AI-Powered Property Energy Intelligence · London, UK</div>
-          </div>
-        </div>
-      </footer>
     </div>
-  );
-}
+
+    <div class="systems-grid">
+      <div class="system-card reveal">
+        <span class="system-num">01</span>
+        <span class="system-glyph">◈</span>
+        <h3>Property Digital Twin</h3>
+        <p>AI constructs a living energy model of every building — tracking thermal performance, system efficiency, and occupancy patterns to simulate real-world behaviour.</p>
+      </div>
+      <div class="system-card reveal reveal-delay-1">
+        <span class="system-num">02</span>
+        <span class="system-glyph">⬡</span>
+        <h3>AI Optimisation Engine</h3>
+        <p>Proprietary ML models identify inefficiencies and generate ranked, costed retrofit recommendations with full financial projections and payback periods.</p>
+      </div>
+      <div class="system-card reveal reveal-delay-2">
+        <span class="system-num">03</span>
+        <span class="system-glyph">⟁</span>
+        <h3>Retrofit Sequencing Intelligence</h3>
+        <p>Determines the optimal order and timing of upgrades to maximise ROI, minimise disruption, and meet Net Zero compliance milestones for your specific property.</p>
+      </div>
+      <div class="system-card reveal reveal-delay-3">
+        <span class="system-num">04</span>
+        <span class="system-glyph">◉</span>
+        <h3>Market Intelligence Layer</h3>
+        <p>Correlates energy improvements with local property market data to calculate precise valuation uplift — linking EPC grades to real, localised sale premiums.</p>
+      </div>
+      <div class="system-card reveal reveal-delay-4">
+        <span class="system-num">05</span>
+        <span class="system-glyph">⬣</span>
+        <h3>Energy-to-Value Engine</h3>
+        <p>Translates technical energy performance into financial language — IRR, NPV, payback periods, and asset value impact — understood by investors and decision-makers.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ─── HOW IT WORKS ─── -->
+<section id="how">
+  <div class="container">
+    <p class="section-eyebrow reveal">Process</p>
+    <h2 class="section-title reveal reveal-delay-1">How It Works</h2>
+    <p class="section-lead reveal reveal-delay-2">A streamlined four-stage process from property submission to actionable intelligence. Designed to minimise your time while maximising the quality of insight delivered.</p>
+
+    <div class="steps-container">
+      <div class="steps-line"></div>
+      <div class="steps-grid">
+        <div class="step-card reveal">
+          <div class="step-num">01</div>
+          <h3>Submit Property Information</h3>
+          <p>Provide your property address, EPC data, utility bills, and any available building information. The more context provided, the more precise the analysis.</p>
+          <span class="step-badge">5–10 minutes</span>
+        </div>
+        <div class="step-card reveal reveal-delay-1">
+          <div class="step-num">02</div>
+          <h3>AI Analysis</h3>
+          <p>Our intelligence engine processes your property data against energy performance benchmarks, local retrofit data, and regulatory requirements.</p>
+          <span class="step-badge">Automated</span>
+        </div>
+        <div class="step-card reveal reveal-delay-2">
+          <div class="step-num">03</div>
+          <h3>Intelligence Report</h3>
+          <p>Receive a detailed digital report with energy performance scoring, specific improvement opportunities, estimated costs, and projected savings.</p>
+          <span class="step-badge">Digital delivery</span>
+        </div>
+        <div class="step-card reveal reveal-delay-3">
+          <div class="step-num">04</div>
+          <h3>Improvement Roadmap</h3>
+          <p>A phased, prioritised roadmap showing which improvements to make first, projected ROI, available grants, and estimated timeline to your target EPC band.</p>
+          <span class="step-badge">Actionable plan</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ─── SERVICES ─── -->
+<section id="services">
+  <div class="container">
+    <p class="section-eyebrow reveal">Services</p>
+    <h2 class="section-title reveal reveal-delay-1">Built for Every Property Type</h2>
+    <p class="section-lead reveal reveal-delay-2">Whether you own a single property or manage a portfolio of hundreds, VIREON has an intelligence tier designed for your specific needs and objectives.</p>
+
+    <div class="services-grid">
+      <div class="service-card reveal">
+        <div class="service-icon">🏠</div>
+        <h3>Residential</h3>
+        <p>For UK homeowners seeking to improve their property's energy performance, reduce bills, and increase long-term asset value.</p>
+        <ul class="service-list">
+          <li>Energy performance report</li>
+          <li>Retrofit priority plan</li>
+          <li>Grant identification</li>
+          <li>EPC improvement pathway</li>
+        </ul>
+      </div>
+      <div class="service-card reveal reveal-delay-1">
+        <div class="service-icon">🔑</div>
+        <h3>Landlords &amp; Portfolios</h3>
+        <p>For buy-to-let landlords and portfolio managers navigating evolving EPC regulations and improving rental yield through efficiency.</p>
+        <ul class="service-list">
+          <li>Portfolio-level analysis</li>
+          <li>Regulatory compliance</li>
+          <li>Tenant impact assessment</li>
+          <li>Phased improvement planning</li>
+        </ul>
+      </div>
+      <div class="service-card reveal reveal-delay-2">
+        <div class="service-icon">🏗️</div>
+        <h3>Developers &amp; Commercial</h3>
+        <p>For property developers, commercial owners, and building managers requiring detailed sustainability analysis and planning support.</p>
+        <ul class="service-list">
+          <li>Pre-acquisition analysis</li>
+          <li>Development planning</li>
+          <li>BREEAM alignment</li>
+          <li>Sustainability reporting</li>
+        </ul>
+      </div>
+      <div class="service-card reveal reveal-delay-3">
+        <div class="service-icon">🏛️</div>
+        <h3>Enterprise</h3>
+        <p>For large-scale property companies, institutional investors, and organisations requiring bespoke AI integration and API access.</p>
+        <ul class="service-list">
+          <li>Custom AI integration</li>
+          <li>API access</li>
+          <li>Dedicated intelligence</li>
+          <li>White-label reporting</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ─── PRICING ─── -->
+<section id="pricing">
+  <div class="container">
+    <p class="section-eyebrow reveal">Pricing</p>
+    <h2 class="section-title reveal reveal-delay-1">Transparent, Scalable Pricing</h2>
+    <p class="section-lead reveal reveal-delay-2">Fixed-price intelligence reports with no hidden fees. Enterprise and portfolio clients receive bespoke quotations based on scope and scale.</p>
+
+    <div class="pricing-grid">
+      <div class="pricing-card reveal">
+        <div class="pricing-tier">Residential</div>
+        <div class="pricing-amount">
+          <span class="price">£149</span>
+          <span class="period">per report</span>
+        </div>
+        <p class="pricing-desc">Full property intelligence report for UK homeowners. One-off payment, delivered digitally.</p>
+        <ul class="pricing-features">
+          <li>Energy performance analysis</li>
+          <li>Retrofit priority ranking</li>
+          <li>EPC improvement roadmap</li>
+          <li>Grant &amp; funding identification</li>
+          <li>Digital report delivery</li>
+        </ul>
+        <a href="#contact" class="pricing-btn">Get Started</a>
+      </div>
+
+      <div class="pricing-card featured reveal reveal-delay-1">
+        <div class="pricing-badge">Most Popular</div>
+        <div class="pricing-tier">Landlords &amp; Portfolios</div>
+        <div class="pricing-amount">
+          <span class="price">£399</span>
+          <span class="period">starting from</span>
+        </div>
+        <p class="pricing-desc">Portfolio-level analysis covering multiple properties with regulatory compliance reporting.</p>
+        <ul class="pricing-features">
+          <li>Everything in Residential</li>
+          <li>Portfolio overview dashboard</li>
+          <li>EPC compliance forecasting</li>
+          <li>Tenant impact reporting</li>
+          <li>Phased improvement planning</li>
+          <li>Priority support</li>
+        </ul>
+        <a href="#contact" class="pricing-btn">Request Proposal</a>
+      </div>
+
+      <div class="pricing-card reveal reveal-delay-2">
+        <div class="pricing-tier">Commercial &amp; Developers</div>
+        <div class="pricing-amount">
+          <span class="price">Custom</span>
+        </div>
+        <p class="pricing-desc">Bespoke analysis for commercial properties, development sites, and mixed-use portfolios.</p>
+        <ul class="pricing-features">
+          <li>Pre-acquisition analysis</li>
+          <li>Development viability modelling</li>
+          <li>BREEAM/EPC alignment</li>
+          <li>Sustainability reporting suite</li>
+          <li>Planning submission support</li>
+        </ul>
+        <a href="#contact" class="pricing-btn">Request Quotation</a>
+      </div>
+
+      <div class="pricing-card reveal reveal-delay-3">
+        <div class="pricing-tier">Enterprise</div>
+        <div class="pricing-amount">
+          <span class="price">Contact Us</span>
+        </div>
+        <p class="pricing-desc">For large-scale operators, institutional investors, and technology partners requiring deep integration.</p>
+        <ul class="pricing-features">
+          <li>API access &amp; integration</li>
+          <li>Custom AI model configuration</li>
+          <li>White-label reporting</li>
+          <li>Dedicated account management</li>
+          <li>SLA &amp; enterprise support</li>
+        </ul>
+        <a href="#contact" class="pricing-btn">Speak with Us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── ROADMAP ─── -->
+<section id="roadmap">
+  <div class="container">
+    <p class="section-eyebrow reveal">Platform Vision</p>
+    <h2 class="section-title reveal reveal-delay-1">Building Towards a Full Intelligence Platform</h2>
+    <p class="section-lead reveal reveal-delay-2">VIREON is designed to evolve. The current intelligence reports are the foundation of a comprehensive property analytics platform launching across 2025–2026.</p>
+
+    <div class="roadmap-grid">
+      <div class="roadmap-timeline">
+        <div class="timeline-item reveal">
+          <div class="timeline-dot active"></div>
+          <div>
+            <span class="timeline-phase">Phase 1 · Current</span>
+            <h4>AI Property Intelligence Reports</h4>
+            <p>Residential and portfolio energy intelligence reports. Pilot customer onboarding active across the UK.</p>
+          </div>
+        </div>
+        <div class="timeline-item reveal reveal-delay-1">
+          <div class="timeline-dot"></div>
+          <div>
+            <span class="timeline-phase">Phase 2 · Q3 2025</span>
+            <h4>Client Dashboard &amp; Account Portal</h4>
+            <p>Secure client portal with report management, property tracking, and improvement progress monitoring.</p>
+          </div>
+        </div>
+        <div class="timeline-item reveal reveal-delay-2">
+          <div class="timeline-dot"></div>
+          <div>
+            <span class="timeline-phase">Phase 3 · Q1 2026</span>
+            <h4>Live Analytics Platform</h4>
+            <p>Real-time energy monitoring integration, live EPC regulatory tracking, and dynamic portfolio analytics dashboard.</p>
+          </div>
+        </div>
+        <div class="timeline-item reveal reveal-delay-3">
+          <div class="timeline-dot"></div>
+          <div>
+            <span class="timeline-phase">Phase 4 · 2026</span>
+            <h4>Enterprise API &amp; Smart Building Intelligence</h4>
+            <p>Full API platform for enterprise clients, IoT sensor integration, and predictive building maintenance intelligence.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="roadmap-dashboard reveal reveal-delay-1">
+        <div class="dashboard-header">
+          <span class="dashboard-title">Live Impact Dashboard</span>
+          <span class="dashboard-status">Coming Soon</span>
+        </div>
+        <div class="dashboard-body">
+          <div class="dash-metric">
+            <span class="dash-metric-label">Pilot customer onboarding</span>
+            <span class="dash-metric-value active">Open</span>
+          </div>
+          <div class="dash-metric">
+            <span class="dash-metric-label">Properties analysed</span>
+            <span class="dash-metric-value">In progress</span>
+          </div>
+          <div class="dash-metric">
+            <span class="dash-metric-label">Verified case studies</span>
+            <span class="dash-metric-value">In development</span>
+          </div>
+          <div class="dash-metric">
+            <span class="dash-metric-label">Real customer metrics</span>
+            <span class="dash-metric-value">Coming soon</span>
+          </div>
+          <div class="dash-metric">
+            <span class="dash-metric-label">Smart property insights</span>
+            <span class="dash-metric-value">In development</span>
+          </div>
+          <div class="dash-metric">
+            <span class="dash-metric-label">Portfolio analytics</span>
+            <span class="dash-metric-value">Q3 2025</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ─── CASE STUDIES ─── -->
+<section id="cases">
+  <div class="container">
+    <p class="section-eyebrow reveal">Case Studies</p>
+    <h2 class="section-title reveal reveal-delay-1">Real-World Results</h2>
+    <p class="section-lead reveal reveal-delay-2">VIREON is currently working with pilot clients across the UK. Verified case studies and performance metrics will be published as projects complete.</p>
+
+    <div class="cases-grid">
+      <div class="case-card reveal">
+        <div class="case-status">🔄 Launching Soon</div>
+        <h3>Victorian Terrace Retrofit</h3>
+        <p>A London-based homeowner using VIREON's analysis to plan a full whole-house retrofit. Targeting EPC band C from F, incorporating heat pump installation, solid wall insulation, and solar PV.</p>
+        <div class="case-type">Residential · Greater London · 2025</div>
+      </div>
+      <div class="case-card reveal reveal-delay-1">
+        <div class="case-status">🔄 In Progress</div>
+        <h3>Buy-to-Let Portfolio Analysis</h3>
+        <p>A landlord with 12 properties across the Midlands using VIREON to map regulatory compliance requirements ahead of proposed EPC legislation changes, with phased improvement planning.</p>
+        <div class="case-type">Landlord Portfolio · Midlands · 2025</div>
+      </div>
+      <div class="case-card reveal reveal-delay-2">
+        <div class="case-status">🔄 Coming Q3 2025</div>
+        <h3>Commercial Development Appraisal</h3>
+        <p>A property developer integrating VIREON into the pre-acquisition process for commercial assets, using sustainability analysis to inform investment decisions and planning applications.</p>
+        <div class="case-type">Commercial · UK National · 2025</div>
+      </div>
+    </div>
+
+    <div class="pilot-banner reveal">
+      <div class="pilot-banner-text">
+        <div class="pilot-dot"></div>
+        <div>
+          <p>Pilot projects launching now across the UK.</p>
+          <span>Currently onboarding homeowners, landlords, and property partners. Contact us to join the pilot programme.</span>
+        </div>
+      </div>
+      <a href="#contact" class="btn-primary">Join the Pilot</a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CONTACT ─── -->
+<section id="contact">
+  <div class="container">
+    <p class="section-eyebrow reveal">Contact &amp; Consultation</p>
+    <h2 class="section-title reveal reveal-delay-1">Start a Conversation</h2>
+    <p class="section-lead reveal reveal-delay-2">Whether you're a homeowner, landlord, developer, or investor — we'd like to understand your property intelligence needs and discuss how VIREON can help.</p>
+
+    <div class="contact-grid">
+      <div class="contact-info reveal reveal-delay-1">
+        <div class="contact-detail">
+          <div class="contact-icon">📧</div>
+          <div>
+            <h4>General Enquiries</h4>
+            <p>hello@vireon.ai</p>
+          </div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-icon">💼</div>
+          <div>
+            <h4>Partnerships &amp; Enterprise</h4>
+            <p>partnerships@vireon.ai</p>
+          </div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-icon">🗺️</div>
+          <div>
+            <h4>Based in the United Kingdom</h4>
+            <p>Operating nationally across England, Scotland, and Wales.</p>
+          </div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-icon">⏱️</div>
+          <div>
+            <h4>Response Time</h4>
+            <p>We aim to respond to all enquiries within one business day.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-form reveal reveal-delay-2">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">First Name</label>
+            <input class="form-input" type="text" placeholder="James">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Name</label>
+            <input class="form-input" type="text" placeholder="Thornton">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" type="email" placeholder="james@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">I am a...</label>
+          <select class="form-select">
+            <option value="">Select your profile</option>
+            <option>Homeowner</option>
+            <option>Landlord / Portfolio Owner</option>
+            <option>Property Developer</option>
+            <option>Commercial Property Owner</option>
+            <option>Property Investor</option>
+            <option>Retrofit Professional</option>
+            <option>Enterprise / Institutional</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tell us about your property or project</label>
+          <textarea class="form-textarea" placeholder="Briefly describe your property, portfolio, or what you're looking to achieve..."></textarea>
+        </div>
+        <button class="btn-primary" style="width:100%; justify-content:center;">
+          Send Enquiry
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+        <p class="form-note">Your information is handled in accordance with UK GDPR. We will never share your data with third parties.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#" class="nav-logo" style="text-decoration:none;">
+          <div class="nav-logo-mark">V</div>
+          <span class="nav-logo-text">VIREON</span>
+        </a>
+        <p>AI-powered property and energy intelligence for UK homeowners, landlords, developers, and property professionals. Built for a more sustainable built environment.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <ul>
+          <li><a href="#what">How it Works</a></li>
+          <li><a href="#intelligence">AI Intelligence</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#roadmap">Roadmap</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Solutions</h4>
+        <ul>
+          <li><a href="#services">Residential</a></li>
+          <li><a href="#services">Landlords</a></li>
+          <li><a href="#services">Commercial</a></li>
+          <li><a href="#services">Enterprise</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#contact">Contact</a></li>
+          <li><a href="#cases">Case Studies</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 2025 VIREON AI Ltd. All rights reserved. Registered in England &amp; Wales.</span>
+      <div class="footer-legal">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Cookie Policy</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ─── Scroll reveal
+  const revealEls = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+  revealEls.forEach(el => observer.observe(el));
+
+  // ─── Nav scroll style
+  const nav = document.getElementById('main-nav');
+  window.addEventListener('scroll', () => {
+    nav.style.background = window.scrollY > 60
+      ? 'rgba(255,255,255,0.97)'
+      : 'rgba(255,255,255,0.9)';
+  });
+
+  // ─── Mobile menu toggle
+  function toggleMenu() {
+    const links = document.querySelector('.nav-links');
+    const open = links.style.display === 'flex';
+    links.style.display = open ? 'none' : 'flex';
+    if (!open) {
+      links.style.flexDirection = 'column';
+      links.style.position = 'absolute';
+      links.style.top = '64px';
+      links.style.left = '0';
+      links.style.right = '0';
+      links.style.background = 'rgba(255,255,255,0.99)';
+      links.style.padding = '24px 24px 32px';
+      links.style.borderBottom = '1px solid rgba(0,0,0,0.07)';
+      links.style.backdropFilter = 'blur(20px)';
+    }
+  }
+
+  // ─── Smooth anchor scrolling with nav offset
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        const top = target.getBoundingClientRect().top + window.scrollY - 72;
+        window.scrollTo({ top, behavior: 'smooth' });
+        // Close mobile menu if open
+        const links = document.querySelector('.nav-links');
+        if (links.style.flexDirection === 'column') links.style.display = 'none';
+      }
+    });
+  });
+</script>
+</body>
+</html>
