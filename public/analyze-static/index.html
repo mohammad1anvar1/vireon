@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VIREON — Property Analyser</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:       #1B2A4A;
+      --navy2:      #243660;
+      --navy-faint: #EEF0F8;
+      --ink:        #1B2A4A;
+      --ink-mid:    #4A5568;
+      --ink-light:  #718096;
+      --ink-faint:  #A0AEC0;
+      --border:     #E4E8F0;
+      --font:       'Inter', sans-serif;
+      --serif:      'Instrument Serif', serif;
+      --ease:       cubic-bezier(.4,0,.2,1);
+    }
+    html, body { background: #ffffff !important; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: #ffffff;
+      color: var(--ink);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ═══ PARTICLE CANVAS ═══ */
+    #particle-canvas {
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none;
+      opacity: .45;
+    }
+
+    /* ═══ HEX GRID OVERLAY ═══ */
+    .hex-grid {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 0 L56 16 L56 48 L28 64 L0 48 L0 16 Z' fill='none' stroke='%231B2A4A' stroke-width='.4' stroke-opacity='.06'/%3E%3C/svg%3E");
+      background-size: 56px 100px;
+    }
+
+    /* ═══ NAV ═══ */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 64px;
+      background: rgba(255,255,255,.94);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+    }
+    .nav-inner {
+      max-width: 1320px; margin: 0 auto; padding: 0 32px; width: 100%;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-mark {
+      width: 34px; height: 34px; background: var(--navy); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-mark svg { width: 18px; height: 18px; }
+    .logo-name { display: flex; flex-direction: column; }
+    .logo-name strong { font-size: .9rem; font-weight: 700; color: var(--navy); letter-spacing: .06em; line-height: 1.1; }
+    .logo-name span { font-size: .62rem; color: var(--ink-light); letter-spacing: .04em; }
+    .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+    .nav-links a { font-size: .82rem; font-weight: 400; color: var(--ink-mid); text-decoration: none; transition: color .2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--navy); font-weight: 500; }
+    .nav-cta { font-size: .78rem; font-weight: 600; color: var(--navy); text-decoration: none; transition: opacity .2s; }
+    .nav-cta:hover { opacity: .6; }
+
+    /* ═══ PAGE ═══ */
+    .page { position: relative; z-index: 1; padding-top: 64px; }
+
+    /* ═══ HERO ═══ */
+    .hero {
+      max-width: 1320px; margin: 0 auto;
+      padding: 52px 32px 60px;
+      display: grid;
+      grid-template-columns: 260px 1fr 260px;
+      gap: 28px;
+      align-items: start;
+    }
+
+    /* ═══ LEFT PANEL ═══ */
+    .left-col { display: flex; flex-direction: column; gap: 16px; padding-top: 40px; }
+
+    /* Isometric city card */
+    .city-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(27,42,74,.08);
+      position: relative;
+      height: 210px;
+    }
+    .city-card-inner {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    /* scanning line effect */
+    .scan-line {
+      position: absolute; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(27,42,74,.25), transparent);
+      animation: scan 3s ease-in-out infinite;
+    }
+    @keyframes scan {
+      0%   { top: 0%; opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { top: 100%; opacity: 0; }
+    }
+    /* corner brackets */
+    .corner { position: absolute; width: 14px; height: 14px; }
+    .corner.tl { top: 10px; left: 10px; border-top: 2px solid var(--navy); border-left: 2px solid var(--navy); opacity: .4; }
+    .corner.tr { top: 10px; right: 10px; border-top: 2px solid var(--navy); border-right: 2px solid var(--navy); opacity: .4; }
+    .corner.bl { bottom: 10px; left: 10px; border-bottom: 2px solid var(--navy); border-left: 2px solid var(--navy); opacity: .4; }
+    .corner.br { bottom: 10px; right: 10px; border-bottom: 2px solid var(--navy); border-right: 2px solid var(--navy); opacity: .4; }
+    .city-label {
+      position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+      font-size: .58rem; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--navy); opacity: .4; white-space: nowrap;
+    }
+
+    /* data stream card */
+    .stream-card {
+      background: #fff; border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px 18px; box-shadow: 0 2px 12px rgba(27,42,74,.06);
+      position: relative; overflow: hidden;
+      animation: floatA 5s ease-in-out infinite;
+    }
+    .stream-card:nth-child(3) { animation-delay: 1.8s; }
+    .stream-card:nth-child(4) { animation-delay: 3.2s; }
+    @keyframes floatA { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+    /* glowing left bar */
+    .stream-card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+      background: var(--navy); opacity: .2; border-radius: 2px 0 0 2px;
+    }
+    .sc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .sc-label { font-size: .62rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); }
+    .sc-live {
+      display: flex; align-items: center; gap: 4px;
+      font-size: .58rem; color: var(--ink-faint);
+    }
+    .live-dot { width: 5px; height: 5px; border-radius: 50%; background: #48BB78; animation: pulse-g 2s ease infinite; }
+    @keyframes pulse-g { 0%,100%{box-shadow:0 0 0 0 rgba(72,187,120,.5)} 50%{box-shadow:0 0 0 4px rgba(72,187,120,0)} }
+    .sc-val { font-family: var(--serif); font-size: 1.4rem; color: var(--navy); line-height: 1; }
+    .sc-sub { font-size: .65rem; color: var(--ink-faint); margin-top: 3px; }
+    .sc-delta { font-size: .68rem; font-weight: 600; color: #38A169; margin-top: 3px; }
+
+    /* mini sparkline in card */
+    .mini-spark { margin-top: 8px; }
+
+    /* EPC row */
+    .epc-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+    .epc-dot {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--navy); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .72rem; font-weight: 700; flex-shrink: 0;
+    }
+    .epc-info { font-size: .68rem; color: var(--ink-mid); }
+
+    /* ═══ CENTRE ═══ */
+    .centre-col { display: flex; flex-direction: column; align-items: center; }
+
+    .form-heading { text-align: center; margin-bottom: 18px; }
+    .form-heading h1 {
+      font-family: var(--serif); font-size: 2.3rem; font-weight: 400;
+      color: var(--navy); line-height: 1.2; margin-bottom: 8px;
+    }
+    .form-heading h1 span { font-style: italic; }
+    .form-heading p { font-size: .875rem; color: var(--ink-light); }
+
+    /* sparkle */
+    .sparkle { display: inline-block; animation: sparkle-spin 4s linear infinite; }
+    @keyframes sparkle-spin { 0%,100%{transform:rotate(0deg) scale(1)} 50%{transform:rotate(180deg) scale(1.2)} }
+
+    /* trust badges */
+    .trust-badges {
+      display: flex; align-items: center; justify-content: center;
+      gap: 18px; margin-bottom: 18px; flex-wrap: wrap;
+    }
+    .tb {
+      display: flex; align-items: center; gap: 5px;
+      font-size: .7rem; color: var(--ink-mid);
+    }
+    .tb svg { color: var(--navy); opacity: .55; }
+
+    /* form card */
+    .form-card {
+      width: 100%; max-width: 680px;
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(27,42,74,.12);
+      padding: 30px 26px 26px;
+      position: relative; overflow: hidden;
+    }
+    /* animated top glow bar */
+    .form-card::before {
+      content: '';
+      position: absolute; top: 0; left: -100%; right: -100%; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--navy), transparent);
+      animation: glowbar 3s ease-in-out infinite;
+    }
+    @keyframes glowbar {
+      0%   { left: -100%; opacity: .6; }
+      50%  { left: 0%;    opacity: 1; }
+      100% { left: 100%;  opacity: .6; }
+    }
+
+    /* inputs */
+    .ig { margin-bottom: 10px; }
+    .ir2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .iw { position: relative; display: flex; align-items: center; }
+    .ii {
+      position: absolute; left: 14px; color: var(--ink-faint);
+      display: flex; align-items: center; pointer-events: none; z-index: 1;
+    }
+    .iw input, .iw select {
+      width: 100%; padding: 13px 14px 13px 44px;
+      font-family: var(--font); font-size: .875rem; color: var(--ink);
+      background: #F7F9FC; border: 1.5px solid var(--border); border-radius: 10px;
+      outline: none; transition: border-color .2s, background .2s, box-shadow .2s;
+      appearance: none; -webkit-appearance: none;
+    }
+    .iw input::placeholder { color: var(--ink-faint); }
+    .iw input:focus, .iw select:focus {
+      border-color: var(--navy); background: #fff;
+      box-shadow: 0 0 0 3px rgba(27,42,74,.07);
+    }
+    .sa { position: absolute; right: 13px; pointer-events: none; color: var(--ink-faint); }
+
+    /* CTA */
+    .btn-cta {
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      width: 100%; margin-top: 6px; padding: 15px 24px;
+      font-family: var(--font); font-size: .9rem; font-weight: 600;
+      color: #fff; background: var(--navy);
+      border: none; border-radius: 10px; cursor: pointer;
+      position: relative; overflow: hidden;
+      transition: background .2s, transform .2s, box-shadow .2s;
+    }
+    /* shimmer sweep on button */
+    .btn-cta::after {
+      content: '';
+      position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+      transition: none;
+    }
+    .btn-cta:hover::after { animation: shimmer .6s ease forwards; }
+    @keyframes shimmer { to { left: 140%; } }
+    .btn-cta:hover { background: var(--navy2); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(27,42,74,.28); }
+    .btn-cta:active { transform: translateY(0); }
+    .btn-cta.loading { pointer-events: none; }
+    .btn-cta.loading .btn-label { opacity: 0; }
+    .btn-arr { transition: transform .2s; }
+    .btn-cta:hover .btn-arr { transform: translateX(3px); }
+    .spinner {
+      position: absolute; width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin .65s linear infinite; display: none;
+    }
+    .btn-cta.loading .spinner { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .form-note { text-align: center; margin-top: 10px; font-size: .7rem; color: var(--ink-faint); }
+
+    /* ═══ RIGHT PANEL ═══ */
+    .right-col { display: flex; flex-direction: column; gap: 16px; padding-top: 8px; }
+
+    .r-card {
+      background: #fff; border: 1px solid var(--border); border-radius: 16px;
+      padding: 18px 20px; box-shadow: 0 2px 12px rgba(27,42,74,.07);
+      animation: floatB 5s ease-in-out infinite;
+    }
+    .r-card:nth-child(1) { animation-delay: 0s; }
+    .r-card:nth-child(2) { animation-delay: 1.5s; }
+    .r-card:nth-child(3) { animation-delay: 3s; }
+    @keyframes floatB { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+
+    /* Neural network card */
+    .neural-card {
+      padding: 20px; min-height: 160px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    /* subtle bg gradient in neural card */
+    .neural-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 50%, rgba(27,42,74,.04) 0%, transparent 70%);
+    }
+
+    /* orbit rings */
+    .orbit-wrap { position: relative; width: 120px; height: 120px; flex-shrink: 0; }
+    .orbit {
+      position: absolute; border-radius: 50%;
+      border: 1px solid rgba(27,42,74,.12);
+    }
+    .orbit-1 { inset: 0; animation: orbit-spin 10s linear infinite; }
+    .orbit-2 { inset: 14px; border-color: rgba(27,42,74,.18); animation: orbit-spin 7s linear infinite reverse; }
+    .orbit-3 { inset: 28px; border-color: rgba(27,42,74,.25); animation: orbit-spin 5s linear infinite; }
+    @keyframes orbit-spin { to { transform: rotate(360deg); } }
+    /* orbiting dot */
+    .orbit-dot {
+      position: absolute; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--navy); top: -3px; left: calc(50% - 3px);
+    }
+    .orbit-dot-2 { width: 5px; height: 5px; top: calc(50% - 2.5px); right: -2.5px; left: auto; background: var(--navy); opacity: .6; }
+    .orbit-center {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ai-chip {
+      width: 42px; height: 42px; background: var(--navy); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: .75rem; font-weight: 700; letter-spacing: .04em;
+      box-shadow: 0 0 20px rgba(27,42,74,.3);
+    }
+    /* pulsing glow behind chip */
+    .ai-glow {
+      position: absolute; width: 50px; height: 50px; border-radius: 50%;
+      background: rgba(27,42,74,.1);
+      animation: glow-pulse 2s ease infinite;
+    }
+    @keyframes glow-pulse { 0%,100%{transform:scale(1);opacity:.5} 50%{transform:scale(1.6);opacity:0} }
+
+    /* node scatter around orbit */
+    .node-scatter { position: absolute; inset: 0; }
+    .nd {
+      position: absolute; width: 5px; height: 5px; border-radius: 50%;
+      background: var(--navy); opacity: .25;
+      animation: nd-blink 2.5s ease infinite;
+    }
+    .nd:nth-child(2){animation-delay:.5s}.nd:nth-child(3){animation-delay:1s}
+    .nd:nth-child(4){animation-delay:1.5s}.nd:nth-child(5){animation-delay:.8s}
+    .nd:nth-child(6){animation-delay:2s}.nd:nth-child(7){animation-delay:.3s}
+    .nd:nth-child(8){animation-delay:1.2s}
+    @keyframes nd-blink { 0%,100%{opacity:.2} 50%{opacity:.7} }
+
+    .neural-info { margin-left: 16px; }
+    .neural-title { font-size: .75rem; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+    .neural-sub { font-size: .65rem; color: var(--ink-faint); line-height: 1.5; }
+    .neural-stat { margin-top: 10px; }
+    .neural-stat-bar {
+      height: 4px; background: #EEF0F8; border-radius: 2px; overflow: hidden; margin-top: 4px;
+    }
+    .neural-stat-fill {
+      height: 100%; background: var(--navy); border-radius: 2px;
+      animation: fill-bar 2s ease forwards;
+    }
+    @keyframes fill-bar { from { width: 0%; } }
+
+    /* market trend card */
+    .rc-label { font-size: .72rem; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+    .rc-sub { font-size: .62rem; color: var(--ink-faint); margin-bottom: 10px; }
+    .trend-svg { width: 100%; height: 52px; }
+
+    /* investment score */
+    .score-wrap { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
+    .score-ring { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
+    .score-num {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .score-num strong { font-size: .95rem; font-weight: 700; color: var(--navy); line-height: 1; }
+    .score-num small { font-size: .5rem; color: var(--ink-faint); }
+    .score-info strong { display: block; font-size: .82rem; color: var(--navy); }
+    .score-info small { font-size: .63rem; color: var(--ink-faint); }
+
+    /* data pulse card */
+    .pulse-card {
+      padding: 16px 20px; position: relative; overflow: hidden;
+    }
+    .pulse-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 8px;
+    }
+    .pulse-col { display: flex; flex-direction: column-reverse; gap: 3px; }
+    .pulse-block {
+      height: 8px; border-radius: 2px; background: var(--navy);
+      animation: pulse-block 2s ease infinite;
+    }
+    .pulse-block:nth-child(1){animation-delay:.1s}.pulse-block:nth-child(2){animation-delay:.2s}
+    .pulse-block:nth-child(3){animation-delay:.3s}.pulse-block:nth-child(4){animation-delay:.4s}
+    @keyframes pulse-block { 0%,100%{opacity:.15} 50%{opacity:.6} }
+
+    /* ═══ BOTTOM TRUST STRIP ═══ */
+    .trust-strip {
+      max-width: 1320px; margin: 0 auto;
+      padding: 0 32px 64px;
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 16px;
+    }
+    .ts-card {
+      background: #fff; border: 1px solid var(--border); border-radius: 16px;
+      padding: 20px 18px; display: flex; align-items: flex-start; gap: 13px;
+      box-shadow: 0 1px 4px rgba(27,42,74,.05);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .ts-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(27,42,74,.09); }
+    .ts-icon {
+      width: 38px; height: 38px; border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ts-icon.purple { background: #EDE9FE; color: #7C3AED; }
+    .ts-icon.navy   { background: var(--navy-faint); color: var(--navy); }
+    .ts-icon.blue   { background: #DBEAFE; color: #2563EB; }
+    .ts-icon.amber  { background: #FEF3C7; color: #D97706; }
+    .ts-body strong { display: block; font-size: .8rem; color: var(--navy); margin-bottom: 4px; }
+    .ts-body p { font-size: .72rem; color: var(--ink-light); line-height: 1.5; }
+
+    /* free note */
+    .free-note {
+      max-width: 1320px; margin: 0 auto; padding: 0 32px 32px;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      font-size: .75rem; color: var(--ink-light);
+    }
+    .free-note svg { color: var(--navy); opacity: .4; }
+
+    /* footer */
+    footer {
+      border-top: 1px solid var(--border); padding: 24px 32px;
+      max-width: 1320px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .foot-logo { display: flex; align-items: center; gap: 8px; }
+    .foot-mark {
+      width: 26px; height: 26px; background: var(--navy); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .foot-mark svg { width: 13px; height: 13px; }
+    .foot-name { font-size: .78rem; font-weight: 700; color: var(--navy); letter-spacing: .06em; }
+    .foot-copy { font-size: .7rem; color: var(--ink-faint); }
+
+    /* ═══ LOADING ═══ */
+    .loading-overlay {
+      display: none; position: fixed; inset: 0; z-index: 500;
+      background: rgba(255,255,255,.9); backdrop-filter: blur(14px);
+      flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    }
+    .loading-overlay.active { display: flex; }
+    /* hex loader */
+    .hex-loader {
+      position: relative; width: 60px; height: 60px;
+    }
+    .hex-loader svg { animation: spin 1.2s linear infinite; }
+    .l-title { font-family: var(--serif); font-size: 1.15rem; color: var(--navy); }
+    .l-step { font-size: .75rem; color: var(--ink-light); }
+
+    /* ═══ FADE IN ═══ */
+    .fade { opacity: 0; transform: translateY(20px); animation: fadeUp .6s var(--ease) forwards; }
+    .fade:nth-child(1){animation-delay:.05s}.fade:nth-child(2){animation-delay:.12s}
+    .fade:nth-child(3){animation-delay:.19s}.fade:nth-child(4){animation-delay:.26s}
+    @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+
+    /* ═══ RESPONSIVE ═══ */
+    @media(max-width:1100px){ .hero{grid-template-columns:200px 1fr 200px;gap:18px;} }
+    @media(max-width:860px){
+      .hero{grid-template-columns:1fr;padding-top:28px;}
+      .left-col,.right-col{flex-direction:row;flex-wrap:wrap;}
+      .stream-card,.r-card{flex:1;min-width:140px;}
+      .city-card{height:160px;}
+      .trust-strip{grid-template-columns:repeat(2,1fr);}
+    }
+    @media(max-width:540px){
+      .nav-links{display:none;} .form-card{padding:22px 14px;}
+      .ir2{grid-template-columns:1fr;} .trust-strip{grid-template-columns:1fr;}
+      footer{flex-direction:column;gap:8px;text-align:center;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- PARTICLE CANVAS -->
+<canvas id="particle-canvas"></canvas>
+
+<!-- HEX GRID -->
+<div class="hex-grid" aria-hidden="true"></div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="hex-loader">
+    <svg viewBox="0 0 60 60" width="60" height="60" fill="none">
+      <polygon points="30,4 54,17 54,43 30,56 6,43 6,17" stroke="#1B2A4A" stroke-width="2.5" opacity=".15"/>
+      <polygon points="30,4 54,17 54,43 30,56 6,43 6,17" stroke="#1B2A4A" stroke-width="2.5"
+        stroke-dasharray="140" stroke-dashoffset="140">
+        <animate attributeName="stroke-dashoffset" from="140" to="0" dur="1.2s" repeatCount="indefinite"/>
+      </polygon>
+      <circle cx="30" cy="30" r="8" fill="#1B2A4A" opacity=".12">
+        <animate attributeName="r" values="6;10;6" dur="1.2s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+  </div>
+  <div class="l-title">Analysing Property</div>
+  <div class="l-step" id="lStep">Initialising AI model…</div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 20 20" fill="none"><path d="M3 5L10 15L17 5" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="logo-name">
+        <strong>VIREON</strong>
+        <span>Property Intelligence</span>
+      </div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/platform">Platform</a></li>
+      <li><a href="/ai-intelligence">AI Intelligence</a></li>
+      <li><a href="/digital-twin">Digital Twin</a></li>
+      <li><a href="/ai-systems">AI Systems</a></li>
+      <li><a href="/services">Services</a></li>
+      <li><a href="/pricing">Pricing</a></li>
+      <li><a href="/roadmap">Roadmap</a></li>
+    </ul>
+    <a href="/analyze" class="nav-cta active">Free AI Analysis</a>
+  </div>
+</nav>
+
+<div class="page">
+<section class="hero">
+
+  <!-- LEFT -->
+  <div class="left-col fade">
+
+    <!-- Isometric City -->
+    <div class="city-card">
+      <div class="city-card-inner">
+        <div class="scan-line"></div>
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+        <svg viewBox="0 0 220 180" width="200" height="163" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- base platform isometric -->
+          <ellipse cx="110" cy="155" rx="90" ry="16" fill="#1B2A4A" opacity=".05"/>
+          <!-- grid floor lines -->
+          <line x1="20" y1="148" x2="200" y2="148" stroke="#1B2A4A" stroke-width=".5" opacity=".08"/>
+          <line x1="30" y1="144" x2="190" y2="144" stroke="#1B2A4A" stroke-width=".5" opacity=".06"/>
+          <!-- tall center building -->
+          <rect x="80" y="50" width="44" height="100" rx="2" fill="#1B2A4A"/>
+          <rect x="82" y="52" width="40" height="96" rx="1" fill="#2A3F6E"/>
+          <!-- windows grid -->
+          <rect x="87" y="58" width="7" height="7" rx="1" fill="#7B93C8" opacity=".8"/>
+          <rect x="98" y="58" width="7" height="7" rx="1" fill="#7B93C8" opacity=".8"/>
+          <rect x="109" y="58" width="7" height="7" rx="1" fill="#7B93C8" opacity=".5"/>
+          <rect x="87" y="70" width="7" height="7" rx="1" fill="#7B93C8" opacity=".6"/>
+          <rect x="98" y="70" width="7" height="7" rx="1" fill="#7B93C8" opacity=".9"/>
+          <rect x="109" y="70" width="7" height="7" rx="1" fill="#7B93C8" opacity=".7"/>
+          <rect x="87" y="82" width="7" height="7" rx="1" fill="#7B93C8" opacity=".8"/>
+          <rect x="98" y="82" width="7" height="7" rx="1" fill="#7B93C8" opacity=".4"/>
+          <rect x="109" y="82" width="7" height="7" rx="1" fill="#7B93C8" opacity=".7"/>
+          <rect x="87" y="94" width="7" height="7" rx="1" fill="#7B93C8" opacity=".5"/>
+          <rect x="98" y="94" width="7" height="7" rx="1" fill="#7B93C8" opacity=".8"/>
+          <rect x="109" y="94" width="7" height="7" rx="1" fill="#7B93C8" opacity=".6"/>
+          <rect x="87" y="106" width="7" height="7" rx="1" fill="#7B93C8" opacity=".7"/>
+          <rect x="98" y="106" width="7" height="7" rx="1" fill="#7B93C8" opacity=".3"/>
+          <rect x="109" y="106" width="7" height="7" rx="1" fill="#7B93C8" opacity=".5"/>
+          <!-- antenna -->
+          <line x1="102" y1="50" x2="102" y2="36" stroke="#1B2A4A" stroke-width="1.5" opacity=".5"/>
+          <circle cx="102" cy="34" r="3" fill="#1B2A4A" opacity=".4">
+            <animate attributeName="opacity" values=".3;.9;.3" dur="2s" repeatCount="indefinite"/>
+          </circle>
+          <!-- left building -->
+          <rect x="34" y="88" width="38" height="62" rx="2" fill="#1B2A4A" opacity=".75"/>
+          <rect x="36" y="90" width="34" height="58" rx="1" fill="#2A3F6E" opacity=".75"/>
+          <rect x="40" y="96" width="6" height="6" rx="1" fill="#7B93C8" opacity=".6"/>
+          <rect x="50" y="96" width="6" height="6" rx="1" fill="#7B93C8" opacity=".7"/>
+          <rect x="60" y="96" width="6" height="6" rx="1" fill="#7B93C8" opacity=".4"/>
+          <rect x="40" y="106" width="6" height="6" rx="1" fill="#7B93C8" opacity=".5"/>
+          <rect x="50" y="106" width="6" height="6" rx="1" fill="#7B93C8" opacity=".6"/>
+          <rect x="60" y="106" width="6" height="6" rx="1" fill="#7B93C8" opacity=".8"/>
+          <rect x="40" y="116" width="6" height="6" rx="1" fill="#7B93C8" opacity=".7"/>
+          <rect x="50" y="116" width="6" height="6" rx="1" fill="#7B93C8" opacity=".3"/>
+          <!-- right building -->
+          <rect x="132" y="78" width="52" height="72" rx="2" fill="#1B2A4A" opacity=".8"/>
+          <rect x="134" y="80" width="48" height="68" rx="1" fill="#2A3F6E" opacity=".8"/>
+          <rect x="138" y="86" width="7" height="7" rx="1" fill="#7B93C8" opacity=".7"/>
+          <rect x="149" y="86" width="7" height="7" rx="1" fill="#7B93C8" opacity=".5"/>
+          <rect x="160" y="86" width="7" height="7" rx="1" fill="#7B93C8" opacity=".7"/>
+          <rect x="138" y="97" width="7" height="7" rx="1" fill="#7B93C8" opacity=".4"/>
+          <rect x="149" y="97" width="7" height="7" rx="1" fill="#7B93C8" opacity=".8"/>
+          <rect x="160" y="97" width="7" height="7" rx="1" fill="#7B93C8" opacity=".6"/>
+          <rect x="138" y="108" width="7" height="7" rx="1" fill="#7B93C8" opacity=".6"/>
+          <rect x="149" y="108" width="7" height="7" rx="1" fill="#7B93C8" opacity=".4"/>
+          <rect x="160" y="108" width="7" height="7" rx="1" fill="#7B93C8" opacity=".7"/>
+          <!-- data lines connecting buildings -->
+          <line x1="72" y1="100" x2="80" y2="100" stroke="#7B93C8" stroke-width=".8" stroke-dasharray="2 2" opacity=".4"/>
+          <line x1="124" y1="95" x2="132" y2="95" stroke="#7B93C8" stroke-width=".8" stroke-dasharray="2 2" opacity=".4"/>
+          <!-- ground dots -->
+          <circle cx="55" cy="152" r="3" fill="#1B2A4A" opacity=".1"/>
+          <circle cx="158" cy="152" r="3" fill="#1B2A4A" opacity=".1"/>
+        </svg>
+        <div class="city-label">AI Property Scan</div>
+      </div>
+    </div>
+
+    <!-- Property Value card -->
+    <div class="stream-card">
+      <div class="sc-top">
+        <div class="sc-label">Property Value</div>
+        <div class="sc-live"><div class="live-dot"></div>AI Live</div>
+      </div>
+      <div class="sc-val">—</div>
+      <div class="sc-sub">Enter address for AI estimate</div>
+      <div class="mini-spark">
+        <svg viewBox="0 0 100 24" width="100%" height="24" fill="none">
+          <polyline points="0,20 12,18 24,14 36,16 48,10 60,12 72,6 84,8 100,4"
+            stroke="#1B2A4A" stroke-width="1.5" opacity=".15" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="0,20 12,18 24,14 36,16 48,10 60,12 72,6 84,8 100,4"
+            stroke="#1B2A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+            stroke-dasharray="160" stroke-dashoffset="160">
+            <animate attributeName="stroke-dashoffset" from="160" to="0" dur="2s" fill="freeze"/>
+          </polyline>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Energy card -->
+    <div class="stream-card">
+      <div class="sc-top">
+        <div class="sc-label">Energy Efficiency</div>
+      </div>
+      <div class="epc-row">
+        <div class="epc-dot">?</div>
+        <div class="epc-info">Run analysis to<br/>reveal EPC rating</div>
+      </div>
+      <!-- EPC colour bands -->
+      <div style="display:flex;flex-direction:column;gap:3px;margin-top:10px;">
+        <div style="height:5px;border-radius:3px;background:#276749;width:100%;opacity:.5;"></div>
+        <div style="height:5px;border-radius:3px;background:#38A169;width:85%;opacity:.4;"></div>
+        <div style="height:5px;border-radius:3px;background:#68D391;width:70%;opacity:.35;"></div>
+        <div style="height:5px;border-radius:3px;background:#F6E05E;width:55%;opacity:.3;"></div>
+        <div style="height:5px;border-radius:3px;background:#F6AD55;width:40%;opacity:.25;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTRE -->
+  <div class="centre-col fade">
+    <div class="form-heading">
+      <h1>VIREON AI <span>Property Analyser</span> <span class="sparkle">✦</span></h1>
+      <p>Enter property details to generate a free AI preview.</p>
+    </div>
+
+    <div class="trust-badges">
+      <div class="tb">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        AI-Powered Insights
+      </div>
+      <div class="tb">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Instant Preview
+      </div>
+      <div class="tb">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Data-Driven Accuracy
+      </div>
+      <div class="tb">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        100% Free Preview
+      </div>
+    </div>
+
+    <div class="form-card">
+      <form id="analyseForm" novalidate>
+        <div class="ig">
+          <div class="iw">
+            <span class="ii"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+            <input type="text" placeholder="Property Address" />
+          </div>
+        </div>
+        <div class="ig">
+          <div class="iw">
+            <span class="ii"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+            <select><option value="" disabled selected>Property Type</option><option>Semi-detached house</option><option>Detached house</option><option>Terraced house</option><option>Purpose-built flat</option><option>Converted flat</option><option>Bungalow</option><option>Maisonette</option></select>
+            <span class="sa"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+          </div>
+        </div>
+        <div class="ir2">
+          <div class="iw">
+            <span class="ii"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg></span>
+            <input type="number" placeholder="Bedrooms" min="1" max="20"/>
+          </div>
+          <div class="iw">
+            <span class="ii"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></span>
+            <input type="number" placeholder="Floor Area sqm"/>
+          </div>
+        </div>
+        <div class="ig">
+          <div class="iw">
+            <span class="ii"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+            <select><option value="" disabled selected>Current EPC Rating</option><option>A (92–100)</option><option>B (81–91)</option><option>C (69–80)</option><option>D (55–68)</option><option>E (39–54)</option><option>F (21–38)</option><option>G (1–20)</option><option>Unknown</option></select>
+            <span class="sa"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+          </div>
+        </div>
+        <div class="ig">
+          <div class="iw">
+            <span class="ii"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+            <select><option value="" disabled selected>Heating Type</option><option>Gas central heating</option><option>Electric heating</option><option>Heat pump</option><option>Oil boiler</option><option>Solid fuel</option><option>District heating</option><option>Unknown</option></select>
+            <span class="sa"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+          </div>
+        </div>
+        <div class="ig">
+          <div class="iw">
+            <span class="ii"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>
+            <input type="number" placeholder="Annual Energy Bill £"/>
+          </div>
+        </div>
+        <button type="submit" class="btn-cta" id="analyseBtn">
+          <span class="btn-label" style="display:flex;align-items:center;gap:8px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Generate Free Preview
+            <svg class="btn-arr" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </span>
+          <span class="spinner"></span>
+        </button>
+      </form>
+    </div>
+    <p class="form-note">Our AI will analyse your property and provide instant insights.</p>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right-col fade">
+
+    <!-- Neural AI card -->
+    <div class="r-card neural-card">
+      <div class="orbit-wrap">
+        <div class="orbit orbit-1"><div class="orbit-dot"></div></div>
+        <div class="orbit orbit-2"><div class="orbit-dot orbit-dot-2"></div></div>
+        <div class="orbit orbit-3"></div>
+        <!-- node scatter -->
+        <div class="node-scatter">
+          <div class="nd" style="top:6px;left:40px;"></div>
+          <div class="nd" style="top:25px;left:5px;"></div>
+          <div class="nd" style="top:25px;right:5px;"></div>
+          <div class="nd" style="bottom:6px;left:40px;"></div>
+          <div class="nd" style="top:12px;left:15px;"></div>
+          <div class="nd" style="top:12px;right:15px;"></div>
+          <div class="nd" style="bottom:12px;left:15px;"></div>
+          <div class="nd" style="bottom:12px;right:15px;"></div>
+        </div>
+        <div class="orbit-center">
+          <div class="ai-glow"></div>
+          <div class="ai-chip">AI</div>
+        </div>
+      </div>
+      <div class="neural-info">
+        <div class="neural-title">Neural Analysis</div>
+        <div class="neural-sub">AI model processing<br/>property data streams</div>
+        <div class="neural-stat">
+          <div style="font-size:.6rem;color:#A0AEC0;margin-bottom:3px;">Model accuracy</div>
+          <div class="neural-stat-bar"><div class="neural-stat-fill" style="width:94%;"></div></div>
+        </div>
+        <div class="neural-stat">
+          <div style="font-size:.6rem;color:#A0AEC0;margin-bottom:3px;">Data coverage</div>
+          <div class="neural-stat-bar"><div class="neural-stat-fill" style="width:87%;animation-delay:.4s;"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Market Trend -->
+    <div class="r-card">
+      <div class="rc-label">Market Trend</div>
+      <div class="rc-sub">12 Month AI Forecast</div>
+      <svg class="trend-svg" viewBox="0 0 200 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="tgrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1B2A4A" stop-opacity=".12"/>
+            <stop offset="100%" stop-color="#1B2A4A" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <!-- grid lines -->
+        <line x1="0" y1="40" x2="200" y2="40" stroke="#1B2A4A" stroke-width=".5" opacity=".08"/>
+        <line x1="0" y1="26" x2="200" y2="26" stroke="#1B2A4A" stroke-width=".5" opacity=".06"/>
+        <line x1="0" y1="13" x2="200" y2="13" stroke="#1B2A4A" stroke-width=".5" opacity=".06"/>
+        <!-- area fill -->
+        <path d="M0 40 C18 38 28 36 44 30 S68 22 90 18 S130 10 158 5 L200 2 L200 52 L0 52 Z" fill="url(#tgrad)"/>
+        <!-- line -->
+        <path d="M0 40 C18 38 28 36 44 30 S68 22 90 18 S130 10 158 5 L200 2"
+          fill="none" stroke="#1B2A4A" stroke-width="1.8" stroke-linecap="round"
+          stroke-dasharray="300" stroke-dashoffset="300">
+          <animate attributeName="stroke-dashoffset" from="300" to="0" dur="2s" fill="freeze"/>
+        </path>
+        <!-- end dot with pulse -->
+        <circle cx="200" cy="2" r="3" fill="#1B2A4A"/>
+        <circle cx="200" cy="2" r="3" fill="#1B2A4A" opacity=".2">
+          <animate attributeName="r" values="3;7;3" dur="2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values=".3;0;.3" dur="2s" repeatCount="indefinite"/>
+        </circle>
+      </svg>
+    </div>
+
+    <!-- Investment Score -->
+    <div class="r-card">
+      <div class="rc-label">Investment Score</div>
+      <div class="rc-sub">AI Score</div>
+      <div class="score-wrap">
+        <div class="score-ring">
+          <svg viewBox="0 0 64 64" width="64" height="64">
+            <circle cx="32" cy="32" r="26" fill="none" stroke="#EEF0F8" stroke-width="5"/>
+            <circle cx="32" cy="32" r="26" fill="none" stroke="#1B2A4A" stroke-width="5"
+              stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="29"
+              transform="rotate(-90 32 32)">
+              <animate attributeName="stroke-dashoffset" from="163.4" to="29" dur="1.8s" fill="freeze"/>
+            </circle>
+          </svg>
+          <div class="score-num"><strong>87</strong><small>/100</small></div>
+        </div>
+        <div class="score-info">
+          <strong>Excellent</strong>
+          <small>AI investment score</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Pulse card -->
+    <div class="r-card pulse-card">
+      <div class="rc-label">Data Processing</div>
+      <div class="rc-sub">Live signal analysis</div>
+      <div class="pulse-grid">
+        <!-- col 1 -->
+        <div class="pulse-col">
+          <div class="pulse-block" style="opacity:.5"></div>
+          <div class="pulse-block" style="opacity:.3"></div>
+          <div class="pulse-block" style="opacity:.6"></div>
+        </div>
+        <!-- col 2 -->
+        <div class="pulse-col">
+          <div class="pulse-block" style="opacity:.7"></div>
+          <div class="pulse-block" style="opacity:.4"></div>
+          <div class="pulse-block" style="opacity:.5"></div>
+          <div class="pulse-block" style="opacity:.3"></div>
+        </div>
+        <!-- col 3 -->
+        <div class="pulse-col">
+          <div class="pulse-block" style="opacity:.9"></div>
+          <div class="pulse-block" style="opacity:.6"></div>
+          <div class="pulse-block" style="opacity:.4"></div>
+          <div class="pulse-block" style="opacity:.7"></div>
+          <div class="pulse-block" style="opacity:.3"></div>
+        </div>
+        <!-- col 4 -->
+        <div class="pulse-col">
+          <div class="pulse-block" style="opacity:.6"></div>
+          <div class="pulse-block" style="opacity:.8"></div>
+          <div class="pulse-block" style="opacity:.4"></div>
+        </div>
+        <!-- col 5 -->
+        <div class="pulse-col">
+          <div class="pulse-block" style="opacity:.5"></div>
+          <div class="pulse-block" style="opacity:.3"></div>
+          <div class="pulse-block" style="opacity:.7"></div>
+          <div class="pulse-block" style="opacity:.4"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- TRUST STRIP -->
+<div class="trust-strip">
+  <div class="ts-card fade">
+    <div class="ts-icon purple">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    </div>
+    <div class="ts-body"><strong>AI-Powered Analysis</strong><p>Advanced machine learning models analyse thousands of data points.</p></div>
+  </div>
+  <div class="ts-card fade">
+    <div class="ts-icon navy">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <div class="ts-body"><strong>Secure &amp; Private</strong><p>Your data is encrypted and never shared. 100% confidential.</p></div>
+  </div>
+  <div class="ts-card fade">
+    <div class="ts-icon blue">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    </div>
+    <div class="ts-body"><strong>Instant Results</strong><p>Get your free AI preview in seconds, with actionable insights.</p></div>
+  </div>
+  <div class="ts-card fade">
+    <div class="ts-icon amber">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    </div>
+    <div class="ts-body"><strong>Smarter Decisions</strong><p>Make informed property investment and energy decisions.</p></div>
+  </div>
+</div>
+
+<!-- FREE NOTE -->
+<div class="free-note">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+  This is a free preview. Detailed reports available in our paid plans.
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-logo">
+    <div class="foot-mark"><svg viewBox="0 0 20 20" fill="none"><path d="M3 5L10 15L17 5" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <span class="foot-name">VIREON</span>
+  </div>
+  <div class="foot-copy">© 2026 VIREON AI Ltd · Regulated data processing · GDPR compliant</div>
+</footer>
+</div>
+
+<script>
+  /* ── Particle canvas ── */
+  const canvas = document.getElementById('particle-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function mkParticle() {
+    return {
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.8 + .4,
+      vx: (Math.random() - .5) * .3,
+      vy: (Math.random() - .5) * .3,
+      opacity: Math.random() * .35 + .05
+    };
+  }
+  for (let i = 0; i < 80; i++) particles.push(mkParticle());
+
+  function drawParticles() {
+    ctx.clearRect(0, 0, W, H);
+    const navy = '27,42,74';
+    // draw connections
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 110) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(${navy},${.08 * (1 - dist/110)})`;
+          ctx.lineWidth = .6;
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+    // draw dots
+    particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${navy},${p.opacity})`;
+      ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < -10) p.x = W + 10;
+      if (p.x > W + 10) p.x = -10;
+      if (p.y < -10) p.y = H + 10;
+      if (p.y > H + 10) p.y = -10;
+    });
+    requestAnimationFrame(drawParticles);
+  }
+  drawParticles();
+
+  /* ── Form submit ── */
+  const form = document.getElementById('analyseForm');
+  const btn  = document.getElementById('analyseBtn');
+  const overlay = document.getElementById('loadingOverlay');
+  const stepEl  = document.getElementById('lStep');
+  const steps = [
+    'Fetching EPC register data…',
+    'Running neural property model…',
+    'Calculating retrofit pathways…',
+    'Generating ROI projections…',
+    'Compiling your report…'
+  ];
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    btn.classList.add('loading');
+    overlay.classList.add('active');
+    let i = 0;
+    stepEl.textContent = steps[0];
+    const t = setInterval(() => {
+      i++;
+      if (i < steps.length) { stepEl.textContent = steps[i]; }
+      else {
+        clearInterval(t);
+        setTimeout(() => {
+          overlay.classList.remove('active');
+          btn.classList.remove('loading');
+          alert('Demo mode — connect your backend API to proceed.');
+        }, 600);
+      }
+    }, 900);
+  });
+</script>
+</body>
+</html>
