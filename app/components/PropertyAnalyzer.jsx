@@ -1,3 +1,4 @@
+cat > app/components/PropertyAnalyzer.jsx <<'EOF'
 "use client";
 
 import { useState } from "react";
@@ -131,3 +132,8 @@ export default function PropertyAnalyzer() {
     </main>
   );
 }
+EOF
+
+git add .
+git commit -m "Upgrade analyzer to professional report"
+git push
