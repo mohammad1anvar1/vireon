@@ -984,25 +984,51 @@
     'Generating ROI projections…',
     'Compiling your report…'
   ];
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    btn.classList.add('loading');
-    overlay.classList.add('active');
-    let i = 0;
-    stepEl.textContent = steps[0];
-    const t = setInterval(() => {
-      i++;
-      if (i < steps.length) { stepEl.textContent = steps[i]; }
-      else {
-        clearInterval(t);
-        setTimeout(() => {
-          overlay.classList.remove('active');
-          btn.classList.remove('loading');
-          alert('AI Analysis Generated Successfully');
-        }, 600);
-      }
-    }, 900);
-  });
+  form.addEventListener('submit', async e => {
+  e.preventDefault();
+
+  btn.classList.add('loading');
+  overlay.classList.add('active');
+  stepEl.textContent = 'Running AI property analysis…';
+
+  const inputs = form.querySelectorAll('input, select');
+
+  const formData = {
+    address: inputs[0]?.value || '',
+    propertyType: inputs[1]?.value || '',
+    bedrooms: inputs[2]?.value || '',
+    floorArea: inputs[3]?.value || '',
+    epcRating: inputs[4]?.value || '',
+    heatingType: inputs[5]?.value || '',
+    annualEnergyBill: inputs[6]?.value || ''
+  };
+
+  try {
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    });
+
+    const data = await response.json();
+
+    overlay.classList.remove('active');
+    btn.classList.remove('loading');
+
+    if (data.success) {
+      alert('AI analysis completed successfully. Report preview is ready.');
+      console.log(data);
+    } else {
+      alert('Analysis failed. Please try again.');
+    }
+
+  } catch (error) {
+    overlay.classList.remove('active');
+    btn.classList.remove('loading');
+    alert('Connection error. Please try again.');
+    console.error(error);
+  }
+});
 </script>
 </body>
 </html>
