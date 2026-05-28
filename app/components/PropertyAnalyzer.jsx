@@ -1,4 +1,3 @@
-cat > app/components/PropertyAnalyzer.jsx <<'EOF'
 "use client";
 
 import { useState } from "react";
