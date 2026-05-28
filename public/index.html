@@ -5557,6 +5557,21 @@ document.getElementById('partnerForm').addEventListener('submit', async function
     btn.disabled = false;
   }
 });
+</script> <script>
+document.querySelectorAll('a, button').forEach(el => {
+  if(el.textContent.trim() === 'Find a Provider') {
+    el.addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('find-provider').scrollIntoView({behavior:'smooth'});
+    });
+  }
+  if(el.textContent.trim() === 'Become a Partner') {
+    el.addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('become-partner').scrollIntoView({behavior:'smooth'});
+    });
+  }
+});
 </script>
-</body>
+ </body>
 </html>
