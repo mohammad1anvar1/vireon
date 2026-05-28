@@ -1016,9 +1016,21 @@
     btn.classList.remove('loading');
 
     if (data.success) {
-  alert(
-    `AI analysis completed successfully.\n\nEstimated annual savings: £${data.results.annualSavings}\nROI score: ${data.results.roi}%\nCarbon reduction: ${data.results.carbonReduction} kg CO₂/year`
-  );
+  const resultBox = document.createElement('div');
+  resultBox.innerHTML = `
+    <div style="margin-top:24px;padding:22px;border:1px solid #E4E8F0;border-radius:16px;background:#fff;box-shadow:0 8px 30px rgba(27,42,74,.12);">
+      <h3 style="color:#1B2A4A;margin-bottom:12px;">AI Report Preview</h3>
+      <p><strong>Estimated Annual Savings:</strong> £${data.results.annualSavings}</p>
+      <p><strong>ROI Score:</strong> ${data.results.roi}%</p>
+      <p><strong>Carbon Reduction:</strong> ${data.results.carbonReduction} kg CO₂/year</p>
+      <p><strong>Recommendation:</strong> ${data.results.recommendation}</p>
+      <button style="margin-top:16px;padding:12px 18px;border:none;border-radius:10px;background:#1B2A4A;color:#fff;font-weight:600;cursor:pointer;">
+        Unlock Full PDF Report
+      </button>
+    </div>
+  `;
+
+  form.parentElement.appendChild(resultBox);
   console.log(data);
 } else {
   alert('Analysis failed. Please try again.');
