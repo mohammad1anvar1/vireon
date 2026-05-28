@@ -85,12 +85,12 @@ export default function PropertyAnalyzer() {
     <p><strong>Estimated Annual Saving:</strong> {report.annualSaving}</p>
     <p><strong>Potential EPC After Improvements:</strong> {report.potentialEpc}</p>
 
-    <div style={{ marginTop: 30, padding: 25, border: "1px dashed #999" }}>
-      <h3>🔒 Full AI Intelligence Report Locked</h3>
-      <p>Unlock the complete report including detailed costs, ROI, EPC strategy, carbon analysis, and downloadable PDF.</p>
+    <div style={{ marginTop: 30, padding: 25 }}>
+  <h3>🔒 Full AI Intelligence Report Locked</h3>
+  <p>Unlock the complete report including detailed costs, ROI analysis and recommendations.</p>
 
-      <a href="/pricing">Unlock Full AI Report</a>
-    </div>
-  </section>
-      )}   
-    </main> 
+  <a href="/pricing">Unlock Full AI Report</a>
+</div>
+
+</section>
+)} 
