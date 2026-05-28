@@ -74,7 +74,3 @@ export default function PropertyAnalyzer() {
   );
 }
 EOF
-
-git add .
-git commit -m "Fix analyzer preview clean version"
-git push
