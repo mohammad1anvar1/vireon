@@ -132,4 +132,3 @@ export default function PropertyAnalyzer() {
     </main>
   );
 }
-EOF
