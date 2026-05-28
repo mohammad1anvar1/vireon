@@ -90,4 +90,6 @@ export default function PropertyAnalyzer() {
       <p>Unlock the complete report including detailed costs, ROI, EPC strategy, carbon analysis, and downloadable PDF.</p>
 
       <a href="/pricing">Unlock Full AI Report</a>
-    
+    </div>
+  </section>
+      )}
