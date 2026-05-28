@@ -5047,3 +5047,514 @@
 </script>
 </body>
 </html>
+<!-- 
+==============================================
+VIREON - Find a Provider & Become a Partner
+==============================================
+INSTRUCTIONS:
+1. Open your index.html on GitHub
+2. Click the pencil (edit) icon
+3. Find the closing </body> tag near the bottom
+4. Paste ALL the code below JUST BEFORE </body>
+5. Also paste the CSS into your existing <style> block
+6. Click "Commit changes"
+==============================================
+-->
+
+<!-- ========== PASTE THIS CSS INTO YOUR EXISTING <style> BLOCK ========== -->
+<style id="new-sections-css">
+/* ---- Find a Provider ---- */
+#find-provider {
+  padding: 100px 48px;
+  background: #f9f9f9;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+#find-provider .section-label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #1a3a6b;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+#find-provider h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  color: #0d1b2a;
+  margin-bottom: 16px;
+  max-width: 600px;
+}
+#find-provider .section-desc {
+  color: #555;
+  font-size: 1rem;
+  max-width: 560px;
+  line-height: 1.7;
+  margin-bottom: 48px;
+}
+.provider-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+  max-width: 1100px;
+  margin-bottom: 48px;
+}
+.provider-card {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  padding: 28px 24px;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.provider-card:hover {
+  box-shadow: 0 8px 32px rgba(26,58,107,0.10);
+  transform: translateY(-2px);
+}
+.provider-card .provider-icon {
+  width: 44px;
+  height: 44px;
+  background: rgba(26,58,107,0.08);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  font-size: 20px;
+}
+.provider-card h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0d1b2a;
+  margin-bottom: 8px;
+}
+.provider-card p {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.6;
+}
+.coming-soon-banner {
+  background: linear-gradient(135deg, #1a3a6b 0%, #0d1b2a 100%);
+  border-radius: 16px;
+  padding: 40px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  max-width: 1100px;
+}
+.coming-soon-banner .banner-text h3 {
+  font-family: 'Syne', sans-serif;
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.coming-soon-banner .banner-text p {
+  color: rgba(255,255,255,0.7);
+  font-size: 0.9rem;
+}
+.coming-soon-banner .banner-badge {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.notify-form {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.notify-form input {
+  flex: 1;
+  min-width: 220px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.9rem;
+  outline: none;
+}
+.notify-form button {
+  background: #1a3a6b;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.notify-form button:hover { background: #2a4f8f; }
+.notify-success {
+  display: none;
+  color: #1a3a6b;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-top: 12px;
+}
+
+/* ---- Become a Partner ---- */
+#become-partner {
+  padding: 100px 48px;
+  background: #fff;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+#become-partner .section-label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #1a3a6b;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+#become-partner h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  color: #0d1b2a;
+  margin-bottom: 16px;
+  max-width: 600px;
+}
+#become-partner .section-desc {
+  color: #555;
+  font-size: 1rem;
+  max-width: 560px;
+  line-height: 1.7;
+  margin-bottom: 48px;
+}
+.partner-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  max-width: 1100px;
+  align-items: start;
+}
+@media (max-width: 768px) {
+  .partner-layout { grid-template-columns: 1fr; gap: 40px; }
+  #find-provider, #become-partner { padding: 64px 24px; }
+  .coming-soon-banner { padding: 32px 24px; }
+}
+.partner-benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.benefit-item {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.benefit-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(26,58,107,0.08);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.benefit-item h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0d1b2a;
+  margin-bottom: 4px;
+}
+.benefit-item p {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.6;
+}
+.partner-form-card {
+  background: #f9f9f9;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 16px;
+  padding: 40px 36px;
+}
+.partner-form-card h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #0d1b2a;
+  margin-bottom: 24px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.form-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #444;
+  letter-spacing: 0.03em;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 11px 14px;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #0d1b2a;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #1a3a6b;
+}
+.form-group textarea { resize: vertical; min-height: 90px; }
+.partner-submit {
+  width: 100%;
+  background: #1a3a6b;
+  color: #fff;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 8px;
+  font-family: inherit;
+}
+.partner-submit:hover { background: #2a4f8f; }
+.partner-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.form-success {
+  display: none;
+  text-align: center;
+  padding: 32px;
+}
+.form-success .success-icon { font-size: 48px; margin-bottom: 16px; }
+.form-success h4 { font-size: 1.1rem; font-weight: 700; color: #0d1b2a; margin-bottom: 8px; }
+.form-success p { font-size: 0.9rem; color: #666; }
+.gdpr-note {
+  font-size: 0.75rem;
+  color: #999;
+  margin-top: 12px;
+  line-height: 1.5;
+}
+</style>
+
+<!-- ========== PASTE THIS HTML JUST BEFORE </body> ========== -->
+
+<!-- FIND A PROVIDER SECTION -->
+<section id="find-provider">
+  <p class="section-label">Provider Network</p>
+  <h2>Find a Trusted Provider</h2>
+  <p class="section-desc">VIREON is building a curated network of vetted retrofit contractors, energy assessors, and sustainability consultants across England, Scotland, and Wales.</p>
+
+  <div class="provider-grid">
+    <div class="provider-card">
+      <div class="provider-icon">⚡</div>
+      <h4>Energy Assessors</h4>
+      <p>Accredited DEA and EPC assessors for residential and commercial properties.</p>
+    </div>
+    <div class="provider-card">
+      <div class="provider-icon">🏗️</div>
+      <h4>Retrofit Contractors</h4>
+      <p>TrustMark-registered contractors specialising in insulation, heat pumps, and glazing.</p>
+    </div>
+    <div class="provider-card">
+      <div class="provider-icon">🌱</div>
+      <h4>Sustainability Consultants</h4>
+      <p>BREEAM and net-zero pathway specialists for developers and large portfolios.</p>
+    </div>
+    <div class="provider-card">
+      <div class="provider-icon">💡</div>
+      <h4>Smart Systems Installers</h4>
+      <p>IoT sensor, smart meter, and building automation system installers.</p>
+    </div>
+  </div>
+
+  <div class="coming-soon-banner">
+    <div class="banner-text">
+      <h3>Provider Directory — Launching 2026</h3>
+      <p>Be the first to access verified providers in your area. Enter your email to get notified.</p>
+      <form class="notify-form" id="notifyForm" action="https://formspree.io/f/mqejwnvv" method="POST">
+        <input type="hidden" name="form_type" value="Provider Directory Notification">
+        <input type="email" name="email" placeholder="your@email.com" required>
+        <button type="submit">Notify Me →</button>
+      </form>
+      <p class="notify-success" id="notifySuccess">✅ You're on the list! We'll be in touch soon.</p>
+    </div>
+    <div class="banner-badge">Coming Soon</div>
+  </div>
+</section>
+
+<!-- BECOME A PARTNER SECTION -->
+<section id="become-partner">
+  <p class="section-label">Partnership Programme</p>
+  <h2>Become a VIREON Partner</h2>
+  <p class="section-desc">Join our growing network of property professionals and technology partners. Get early access to VIREON's intelligence tools and grow your business with AI-powered insights.</p>
+
+  <div class="partner-layout">
+    <div class="partner-benefits">
+      <div class="benefit-item">
+        <div class="benefit-icon">📊</div>
+        <div>
+          <h4>Early Platform Access</h4>
+          <p>Be first to use VIREON's AI analysis tools before public launch. Shape the product with your feedback.</p>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">🔗</div>
+        <div>
+          <h4>Verified Partner Listing</h4>
+          <p>Get listed in VIREON's provider directory, visible to homeowners, landlords, and developers across the UK.</p>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">💼</div>
+        <div>
+          <h4>Referral Pipeline</h4>
+          <p>Receive qualified leads directly from VIREON users who need your services based on their property data.</p>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">🤝</div>
+        <div>
+          <h4>Co-Marketing Opportunities</h4>
+          <p>Joint case studies, webinars, and content to grow your brand alongside VIREON's expanding audience.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="partner-form-card">
+      <div id="partnerFormWrap">
+        <h3>Apply to Partner with VIREON</h3>
+        <form id="partnerForm" action="https://formspree.io/f/mqejwnvv" method="POST">
+          <input type="hidden" name="form_type" value="Partner Application">
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name</label>
+              <input type="text" name="first_name" placeholder="James" required>
+            </div>
+            <div class="form-group">
+              <label>Last Name</label>
+              <input type="text" name="last_name" placeholder="Thompson" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Business Name</label>
+            <input type="text" name="business_name" placeholder="Your company name" required>
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" name="email" placeholder="james@example.com" required>
+          </div>
+          <div class="form-group">
+            <label>Business Type</label>
+            <select name="business_type" required>
+              <option value="" disabled selected>Select your business type</option>
+              <option>Energy Assessor / DEA</option>
+              <option>Retrofit Contractor</option>
+              <option>Sustainability Consultant</option>
+              <option>Smart Systems Installer</option>
+              <option>Property Developer</option>
+              <option>Technology Partner</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Region</label>
+            <select name="region" required>
+              <option value="" disabled selected>Select your region</option>
+              <option>England — North</option>
+              <option>England — Midlands</option>
+              <option>England — South</option>
+              <option>England — London</option>
+              <option>Scotland</option>
+              <option>Wales</option>
+              <option>Nationwide</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tell us about your business</label>
+            <textarea name="message" placeholder="Brief description of your services and why you'd like to partner with VIREON..."></textarea>
+          </div>
+          <button type="submit" class="partner-submit" id="partnerSubmitBtn">Submit Application →</button>
+          <p class="gdpr-note">Your information is handled in accordance with UK GDPR. We will never share your data with third parties.</p>
+        </form>
+      </div>
+      <div class="form-success" id="partnerSuccess">
+        <div class="success-icon">✅</div>
+        <h4>Application Received!</h4>
+        <p>Thank you for your interest in partnering with VIREON. Our team will review your application and be in touch within 2 business days.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== PASTE THIS SCRIPT JUST BEFORE </body> ========== -->
+<script>
+// Notify Me form
+document.getElementById('notifyForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = this.querySelector('button');
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(this.action, {
+      method: 'POST',
+      body: new FormData(this),
+      headers: { 'Accept': 'application/json' }
+    });
+    if (res.ok) {
+      this.style.display = 'none';
+      document.getElementById('notifySuccess').style.display = 'block';
+    } else {
+      btn.textContent = 'Try Again';
+      btn.disabled = false;
+    }
+  } catch {
+    btn.textContent = 'Try Again';
+    btn.disabled = false;
+  }
+});
+
+// Partner Application form
+document.getElementById('partnerForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const btn = document.getElementById('partnerSubmitBtn');
+  btn.textContent = 'Submitting...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(this.action, {
+      method: 'POST',
+      body: new FormData(this),
+      headers: { 'Accept': 'application/json' }
+    });
+    if (res.ok) {
+      document.getElementById('partnerFormWrap').style.display = 'none';
+      document.getElementById('partnerSuccess').style.display = 'block';
+    } else {
+      btn.textContent = 'Try Again';
+      btn.disabled = false;
+    }
+  } catch {
+    btn.textContent = 'Try Again';
+    btn.disabled = false;
+  }
+});
+</script>
