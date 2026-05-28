@@ -1,17 +1,17 @@
 "use client";
 
 const plans = [
-  { name: "Basic Property Report", price: 49 },
-  { name: "Professional Retrofit Report", price: 149 },
-  { name: "Enterprise / Partner Plan", price: 499 },
+  { id: "residential", name: "Basic Property Report", price: 49 },
+  { id: "commercial", name: "Professional Retrofit Report", price: 149 },
+  { id: "partner_professional", name: "Enterprise / Partner Plan", price: 249 },
 ];
 
 export default function PricingPage() {
-  async function checkout(plan, price) {
+  async function checkout(productId) {
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan, price }),
+      body: JSON.stringify({ productId }),
     });
 
     const data = await res.json();
@@ -28,12 +28,10 @@ export default function PricingPage() {
       <h1>VIREON AI Pricing</h1>
 
       {plans.map((plan) => (
-        <div key={plan.name} style={{ border: "1px solid #ddd", padding: 24, marginTop: 20 }}>
+        <div key={plan.id} style={{ border: "1px solid #ddd", padding: 24, marginTop: 20 }}>
           <h2>{plan.name}</h2>
           <p>£{plan.price}</p>
-          <button onClick={() => checkout(plan.name, plan.price)}>
-            Pay with Stripe
-          </button>
+          <button onClick={() => checkout(plan.id)}>Pay with Stripe</button>
         </div>
       ))}
     </main>
