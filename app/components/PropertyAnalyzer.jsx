@@ -133,7 +133,3 @@ export default function PropertyAnalyzer() {
   );
 }
 EOF
-
-git add .
-git commit -m "Upgrade analyzer to professional report"
-git push
