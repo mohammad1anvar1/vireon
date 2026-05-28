@@ -78,56 +78,20 @@ export default function PropertyAnalyzer() {
       </form>
 
       {report && (
-        <section style={{ marginTop: 50, border: "1px solid #8fa083", padding: 30 }}>
-          <h2>Property Summary</h2>
-          <p><strong>Address:</strong> {form.address}</p>
-          <p><strong>Property Type:</strong> {form.propertyType}</p>
-          <p><strong>Bedrooms:</strong> {form.bedrooms}</p>
-          <p><strong>Current EPC:</strong> {form.epcRating.toUpperCase()}</p>
-          <p><strong>Floor Area:</strong> {form.floorArea} sqm</p>
-          <p><strong>Heating System:</strong> {form.heatingType}</p>
+  <section style={{ marginTop: 50, border: "1px solid #8fa083", padding: 30 }}>
+    <h2>Free AI Preview</h2>
 
-          <hr />
+    <p><strong>Overall Status:</strong> {report.status}</p>
+    <p><strong>Estimated Annual Saving:</strong> {report.annualSaving}</p>
+    <p><strong>Potential EPC After Improvements:</strong> {report.potentialEpc}</p>
 
-          <h2>AI Property Assessment</h2>
-          <p><strong>Overall Status:</strong> {report.status}</p>
-          <p><strong>Estimated Annual Saving:</strong> {report.annualSaving}</p>
-          <p><strong>Potential EPC After Improvements:</strong> {report.potentialEpc}</p>
-          <p><strong>Estimated Property Value Uplift:</strong> {report.propertyValueUplift}</p>
-          <p><strong>Carbon Reduction:</strong> {report.carbonReduction}</p>
-          <p><strong>Energy Reduction:</strong> {report.energyReduction}</p>
+    <div style={{ marginTop: 30, padding: 25, border: "1px dashed #999" }}>
+      <h3>🔒 Full AI Intelligence Report Locked</h3>
+      <p>Unlock the complete report including detailed costs, ROI, EPC strategy, carbon analysis, and downloadable PDF.</p>
 
-          <hr />
-
-          <h2>Recommended Improvements</h2>
-
-          {report.recommendations.map((item) => (
-            <div key={item.title} style={{ border: "1px solid #444", padding: 20, marginTop: 18 }}>
-              <h3>{item.title}</h3>
-              <p><strong>Estimated Cost:</strong> {item.cost}</p>
-              <p><strong>Estimated Annual Saving:</strong> {item.saving}</p>
-              <p><strong>Estimated Payback:</strong> {item.payback}</p>
-              <p><strong>AI Priority Score:</strong> {item.priority}</p>
-            </div>
-          ))}
-
-          <hr />
-
-          <h2>AI Summary</h2>
-          <p>
-            Based on the submitted property details, VIREON AI identifies insulation,
-            heating optimization and renewable energy integration as the most relevant
-            retrofit opportunities. The highest-return actions should be completed first,
-            followed by solar PV or deeper retrofit upgrades where budget allows.
-          </p>
-
-          <h2>Disclaimer</h2>
-          <p>
-            This report is an AI-generated preliminary assessment for informational purposes only.
-            Actual costs, savings and performance depend on site survey conditions, installer quotations,
-            energy usage, property condition, regulations and local market pricing.
-          </p>
-        </section>
+      <a href="/pricing">Unlock Full AI Report</a>
+    </div>
+)}</section>
       )}
     </main>
   );
