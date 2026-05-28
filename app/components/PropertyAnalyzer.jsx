@@ -92,4 +92,5 @@ export default function PropertyAnalyzer() {
       <a href="/pricing">Unlock Full AI Report</a>
     </div>
   </section>
-      )}
+      )}   
+    </main> 
