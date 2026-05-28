@@ -1016,11 +1016,13 @@
     btn.classList.remove('loading');
 
     if (data.success) {
-      alert('AI analysis completed successfully. Report preview is ready.');
-      console.log(data);
-    } else {
-      alert('Analysis failed. Please try again.');
-    }
+  alert(
+    `AI analysis completed successfully.\n\nEstimated annual savings: £${data.results.annualSavings}\nROI score: ${data.results.roi}%\nCarbon reduction: ${data.results.carbonReduction} kg CO₂/year`
+  );
+  console.log(data);
+} else {
+  alert('Analysis failed. Please try again.');
+}
 
   } catch (error) {
     overlay.classList.remove('active');
