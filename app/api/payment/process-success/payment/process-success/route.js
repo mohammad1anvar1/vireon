@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { verifyCheckoutSession, extractOrderDetails } from '../../../../lib/stripe';
+import { verifyCheckoutSession, extractOrderDetails } from '@/app/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
-import { generateReportPDF } from '../../../../lib/pdf';
-import { sendReportToCustomer, sendAdminNotification } from '../../../../lib/email';
+import { generateReportPDF } from '@/app/lib/pdf';
+import { sendReportToCustomer, sendAdminNotification } from '@/app/lib/email';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
