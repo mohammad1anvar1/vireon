@@ -3465,7 +3465,7 @@
           <li>Grant &amp; funding identification</li>
           <li>Digital report delivery</li>
         </ul>
-        <a href="#contact" class="pricing-btn">#contact</a>
+        href="javascript:void(0)" onclick="startCheckout('residential')" class="pricing-btn"
       </div>
 
       <div class="pricing-card featured reveal reveal-delay-1">
@@ -3484,7 +3484,7 @@
           <li>Phased improvement planning</li>
           <li>Priority support</li>
         </ul>
-        <a href="#contact" class="pricing-btn">Request Proposal</a>
+        <a href="javascript:void(0)" onclick="startCheckout('residential')" class="pricing-btn">Request Proposal</a>
       </div>
 
       <div class="pricing-card reveal reveal-delay-2">
@@ -3500,7 +3500,7 @@
           <li>Sustainability reporting suite</li>
           <li>Planning submission support</li>
         </ul>
-        <a href="#contact" class="pricing-btn">Request Quotation</a>
+        <a href="javascript:void(0)" onclick="startCheckout('residential')" class="pricing-btn">Request Quotation</a>
       </div>
 
       <div class="pricing-card reveal reveal-delay-3">
@@ -3516,7 +3516,7 @@
           <li>Dedicated account management</li>
           <li>SLA &amp; enterprise support</li>
         </ul>
-        <a href="#contact" class="pricing-btn">Speak with Us</a>
+        <a href="javascript:void(0)" onclick="startCheckout('residential')" class="pricing-btn">Speak with Us</a>
       </div>
     </div>
   </div>
@@ -5572,7 +5572,29 @@ document.querySelectorAll('a, button').forEach(el => {
       document.getElementById('become-partner').scrollIntoView({behavior:'smooth'});
     });
   }
-});
+});<script>
+async function startCheckout(productId) {
+  try {
+    const btn = event.target;
+    btn.textContent = 'Loading...';
+    btn.style.opacity = '0.7';
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId })
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert('Payment error: ' + (data.error || 'Please try again'));
+      btn.textContent = 'Get Started';
+      btn.style.opacity = '1';
+    }
+  } catch (err) {
+    alert('Something went wrong. Please try again.');
+  }
+}
 </script>
  </body>
 </html>
