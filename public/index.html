@@ -5584,7 +5584,7 @@ async function startCheckout(productId) {
     body: JSON.stringify({ productId })
   });
   const data = await res.json();
-  if (data.url) { window.location.href = data.url; }
+  if (data.url) { window.top.location.href = data.url; }
   else { alert('Error. Try again.'); btn.textContent = 'Get Started'; }
 }
 </script>

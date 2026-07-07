@@ -14,7 +14,7 @@ function SuccessContent() {
   useEffect(() => {
     if (!sessionId || processed.current) return;
     processed.current = true;
-    fetch('/api/payment/process-success/payment/process-success', {
+    fetch('/api/payment/process-success', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId }),
